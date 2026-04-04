@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Підтвердження коду</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header class="navbar">
+        <div class="container header-content">
+            <h1 class="logo">Коледж</h1>
+        </div>
+    </header>
+
+    <main class="auth-container">
+        <div class="auth-box">
+            <h2>Введіть код</h2>
+
+            <form id="verify-form">
+                <input type="hidden" id="email" name="email" value="{{ reset_email }}">
+
+                <label for="code">Код з пошти</label>
+                <input type="text" id="code" name="code" required>
+
+                <p id="verify-message" class="form-message error-message" style="display:none;"></p>
+
+                <button type="submit">Підтвердити код</button>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        const verifyForm = document.getElementById("verify-form");
+        const verifyMessage = document.getElementById("verify-message");
+
+        verifyForm.addEventListener("submit", async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(verifyForm);
+
+            const response = await fetch("/verify-code", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.ok) {
+                window.location.href = data.redirect;
+            } else {
+                verifyMessage.style.display = "block";
+                verifyMessage.textContent = data.message;
+            }
+        });
+    </script>
+</body>
+</html>

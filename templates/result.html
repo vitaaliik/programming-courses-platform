@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Результат - {{ course_title }}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <main class="test-page">
+        <div class="test-container">
+            <h1>Результат: {{ course_title }}</h1>
+            <p class="subtitle">Ваш результат: <strong>{{ score }} / {{ total }}</strong></p>
+
+            <div class="result-summary">
+                {% if score == total %}
+                    <p>Відмінно! Усі відповіді правильні.</p>
+                {% elif score >= (total / 2) %}
+                    <p>Непогано. Є правильна база, але ще є що підтягнути.</p>
+                {% else %}
+                    <p>Поки що слабенько. Варто ще раз пройти курс і спробувати знову.</p>
+                {% endif %}
+            </div>
+
+            {% for item in details %}
+            <div class="question-card">
+                <h3>{{ loop.index }}. {{ item.question }}</h3>
+                <p><strong>Ваша відповідь:</strong> {{ item.user_answer }}</p>
+                <p><strong>Правильна відповідь:</strong> {{ item.correct_answer }}</p>
+
+                {% if item.is_correct %}
+                    <p class="correct-answer">Правильно</p>
+                {% else %}
+                    <p class="wrong-answer">Неправильно</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <div class="result-actions">
+                <a href="/test/{{ course_name }}" class="back-btn">Пройти ще раз</a>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+.env/
+
+# Database
+database.db
+
+# Ruff / cache
+.ruff_cache/
+.pytest_cache/
+
+# VS Code
+.vscode/
+
+# Backup files
+main_backup.py
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# dotenv (ВАЖЛИВО — тут пошта і пароль)
+.env

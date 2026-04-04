@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Курс: PHP</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <header class="navbar">
+        <div class="container header-content">
+            <h1 class="logo">Курс: PHP</h1>
+            <nav>
+                <a href="/" class="nav-link active">Головна</a>
+                <a href="/courses" class="nav-link">Курси</a>
+                {% if username %}
+                <a href="/profile" class="nav-link">Профіль</a>
+                <a href="/logout" class="auth-btn">Вийти</a>
+                {% else %}
+                <a href="/auth" class="auth-btn">Вхід / Реєстрація</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="container course-main">
+        <div class="course-header">
+            <h2>Курс: PHP</h2>
+            <p>Повний вступ у PHP для початківця: від базового синтаксису до форм, сесій і роботи з базою даних.</p>
+        </div>
+
+        <section class="course-section">
+            <h3>&#127919; Для кого цей курс?</h3>
+            <p>Цей курс створений для <strong>початківців</strong>, які вже бачили HTML/CSS і хочуть зрозуміти, як працює серверна частина сайту. PHP дозволяє не просто показувати сторінку, а обробляти дані, працювати з формами, авторизацією, базами даних і будувати повноцінну логіку для веб-застосунків.</p>
+
+            <h4>Після проходження курсу ти зможеш:</h4>
+            <ul>
+                <li>розуміти, як запускається PHP-код на сервері;</li>
+                <li>створювати змінні, умови, цикли, функції і масиви;</li>
+                <li>обробляти HTML-форми через <code>GET</code> і <code>POST</code>;</li>
+                <li>працювати з сесіями та cookies на базовому рівні;</li>
+                <li>підключатися до MySQL і виконувати запити;</li>
+                <li>створювати прості динамічні сторінки та невеликі веб-проєкти.</li>
+            </ul>
+
+            <div class="result-box">
+                <b>Головна мета курсу:</b> дати тобі не просто окремі PHP-команди, а нормальну базу для створення перших серверних частин сайтів.
+            </div>
+        </section>
+
+        <section class="course-section">
+            <h3>&#128220; Історія та Призначення</h3>
+            <p><strong>PHP</strong> — це серверна мова програмування, яка з’явилася в 1995 році. Спочатку вона створювалася як інструмент для побудови динамічних веб-сторінок, а з часом перетворилась на повноцінну мову для веб-розробки.</p>
+
+            <p>Простими словами:
+            <br>— HTML показує, що бачить користувач
+            <br>— CSS визначає, як це виглядає
+            <br>— JavaScript додає логіку в браузері
+            <br>— PHP виконує логіку на сервері</p>
+
+            <h4>Де використовується PHP?</h4>
+            <ul class="step-list">
+                <li><strong>Сайти та блоги:</strong> WordPress та інші CMS.</li>
+                <li><strong>Форми та авторизація:</strong> реєстрація, логін, кабінет користувача.</li>
+                <li><strong>Робота з базами даних:</strong> користувачі, товари, замовлення, коментарі.</li>
+                <li><strong>Веб-застосунки:</strong> адмін-панелі, особисті кабінети, внутрішні системи.</li>
+            </ul>
+
+            <div class="note">
+                <b>Важливо:</b> PHP виконується на сервері, а не в браузері. Користувач не бачить сам PHP-код, він бачить лише результат його роботи.
+            </div>
+        </section>
+
+        <section class="course-section">
+            <h3>&#128197; План Навчання (Основи)</h3>
+            <ol class="step-list">
+                <li>Як працює PHP і як його підключити.</li>
+                <li>Змінні, типи даних і виведення інформації.</li>
+                <li>Оператори: арифметичні, порівняння та логічні.</li>
+                <li>Умови: <code>if</code>, <code>elseif</code>, <code>else</code>.</li>
+                <li>Цикли: <code>for</code>, <code>while</code>, <code>foreach</code>.</li>
+                <li>Масиви.</li>
+                <li>Функції.</li>
+                <li>Форми та методи <code>GET</code> і <code>POST</code>.</li>
+                <li>Робота з рядками та перевіркою даних.</li>
+                <li>Сесії та cookies.</li>
+                <li>Підключення до MySQL.</li>
+                <li>Отримання і виведення даних із бази.</li>
+                <li>Типові помилки новачків.</li>
+                <li>Практичні задачі та міні-проєкти.</li>
+            </ol>
+        </section>
+
+        <section class="course-section">
+            <h3>&#128194; 1. Як працює PHP</h3>
+            <p>PHP-код виконується на сервері. Це означає, що коли користувач відкриває сторінку, сервер спочатку обробляє PHP, а вже потім відправляє в браузер готовий HTML.</p>
+
+            <h4>1.1 Найпростіший PHP-код</h4>
+            <div class="code-block">
+&lt;?php
+echo "Привіт, світ!";
+?&gt;
+            </div>
+
+            <p>Тут:
+            <br><code>&lt;?php</code> — відкриття PHP-коду
+            <br><code>echo</code> — виведення інформації
+            <br><code>?&gt;</code> — закриття PHP-коду</p>
+
+            <h4>1.2 PHP всередині HTML</h4>
+            <p>PHP можна вставляти прямо в HTML-сторінку.</p>
+
+            <div class="code-block">
+&lt;h1&gt;
+    &lt;?php echo "Мій сайт"; ?&gt;
+&lt;/h1&gt;
+            </div>
+
+            <p>Після виконання сервер підставить текст у HTML, і користувач побачить готовий заголовок.</p>
+
+            <div class="note">
+                <b>Пам’ятай:</b> щоб PHP працював, файл має мати розширення <code>.php</code>, а відкривати його треба через сервер, а не просто подвійним кліком по файлу.
+            </div>
+        </section>
+
+        <section class="course-section">
+            <h3>&#128295; 2. Змінні, типи даних та виведення</h3>
+            <p>У PHP змінні потрібні для зберігання даних: тексту, чисел, логічних значень, масивів тощо.</p>
+
+            <h4>2.1 Створення змінних</h4>
+            <p>Усі змінні в PHP починаються зі знака <code>$</code>.</p>
+
+            <div class="code-block">
+&lt;?php
+$name = "Віталік";
+$age = 18;
+$isStudent = true;
+?&gt;
+            </div>
+
+            <h4>2.2 Основні типи даних</h4>
+            <ul>
+                <li><b>string</b> — текст</li>
+                <li><b>int</b> — цілі числа</li>
+                <li><b>float</b> — дробові числа</li>
+                <li><b>bool</b> — true або false</li>
+                <li><b>array</b> — масиви</li>
+            </ul>
+
+            <h4>2.3 Виведення через echo</h4>
+            <div class="code-block">
+&lt;?php
+$name = "Віталік";
+echo $name;
+?&gt;
+            </div>
+
+            <h4>2.4 Об’єднання тексту</h4>
+            <p>У PHP для об’єднання рядків використовується крапка <code>.</code>.</p>
+
+            <div class="code-block">
+&lt;?php
+$name = "Віталік";
+$age = 18;
+
+echo "Мене звати " . $name . ", мені " . $age . " років.";
+?&gt;
+            </div>
+
+            <div class="practice-block">
+                <b>Практика:</b>
+                <ul>
+                    <li>створи змінні для імені, віку та міста;</li>
+                    <li>виведи їх через <code>echo</code>;</li>
+                    <li>склади одне повідомлення з кількох змінних.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="course-section">
+            <h3>&#128202; 3. Оператори: арифметичні, порівняння та логіка</h3>
+            <p>Оператори дозволяють PHP виконувати обчислення, порівнювати значення та перевіряти логічні умови.</p>
+
+            <h4>3.1 Арифметичні оператори</h4>
+            <div class="code-block">
+&lt;?php
+$a = 10;
+$b = 3;
+
+echo $a + $b;
+echo "&lt;br&gt;";
+echo $a - $b;
+echo "&lt;br&gt;";
+echo $a * $b;
+echo "&lt;br&gt;";
+echo $a / $b;
+echo "&lt;br&gt;";
+echo $a % $b;
+?&gt;
+            </div>
+
+            <h4>3.2 Оператори порівняння</h4>
+            <div class="code-block">
+&lt;?php
+$age = 18;
+
+var_dump($age == 18);
+var_dump($age &gt; 16);
+var_dump($age &lt; 10);
+?&gt;
+            </div>
+
+            <p><code>var_dump()</code> зручно показує значення і його тип, тому для навчання це корисно.</p>
+
+            <h4>3.3 Логічні оператори</h4>
+            <div class="code-block">
+&lt;?php
+$age = 20;
+$hasMoney = true;
+
+$canBuy = ($age &gt;= 18) && $hasMoney;
+var_dump($canBuy);
+?&gt;
+            </div>
+        </section>
+
+        <section class="course-section">
+            <h3>&#128260; 4. Умови: if, elseif, else</h3>
+            <p>Умови потрібні для того, щоб програма могла приймати рішення. Саме завдяки ним PHP-код може поводитися по-різному залежно від значень змінних або даних користувача.</p>
+
+            <h4>4.1 Базовий приклад</h4>
+            <div class="code-block">
+&lt;?php
+$age = 18;
+
+if ($age &gt;= 18) {
+    echo "Повнолітній";
+} else {
+    echo "Неповнолітній";
+}
+?&gt;
+            </div>
+
+            <h4>4.2 Кілька варіантів через elseif</h4>
+            <div class="code-block">
+&lt;?php
+$score = 85;
+
+if ($score &gt;= 90) {
+    echo "Відмінно!";
+} elseif ($score &gt;= 70) {
+    echo "Добре!";
+} else {
+    echo "Потрібно підтягнути знання.";
+}
+?&gt;
+            </div>
+
+            <p>Тут програма перевіряє оцінку і вибирає, який текст показати.</p>
+
+            <div class="practice-block">
+                <b>Практика:</b>
+                <ul>
+                    <li>перевірити, чи людина повнолітня;</li>
+                    <li>знайти більше з двох чисел;</li>
+                    <li>перевірити, чи число парне.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="course-section">
+            <h3>&#128257; 5. Цикли: for, while, foreach</h3>
+            <p>Цикли потрібні для того, щоб повторювати один і той самий код багато разів. Без них довелося б вручну писати одне і те саме знову і знову.</p>
+
+            <h4>5.1 Цикл for</h4>
+            <div class="code-block">
+&lt;?php
+for ($i = 1; $i &lt;= 5; $i++) {
+    echo $i . "&lt;br&gt;";
+}
+?&gt;
+            </div>
+
+            <h4>5.2 Цикл while</h4>
+            <div class="code-block">
+&lt;?php
+$energy = 3;
+
+while ($energy &gt; 0) {
+    echo "Енергія: " . $energy . "&lt;br&gt;";
+    $energy--;
+}
+?&gt;
+            </div>
+
+            <h4>5.3 Цикл foreach</h4>
+            <p><code>foreach</code> дуже зручний для роботи з масивами.</p>
+
+            <div class="code-block">
+&lt;?php
+$names = ["Іван", "Марія", "Олег"];
+
+foreach ($names as $name) {
+    echo $name . "&lt;br&gt;";
+}
+?&gt;
+            </div>
+
+            <div class="note">
+                <b>Порада:</b> для масивів у PHP дуже часто найзручніше використовувати саме <code>foreach</code>.
+            </div>
+        </section>
+
+        <section class="course-section">
+            <h3>&#128451; 6. Масиви</h3>
+            <p><b>Масив</b> — це змінна, яка може зберігати одразу багато значень. У PHP масиви дуже важливі, бо через них часто передаються дані форм, списки товарів, користувачів, меню та багато іншого.</p>
+
+            <h4>6.1 Звичайний масив</h4>
+            <div class="code-block">
+&lt;?php
+$numbers = [10, 20, 30, 40, 50];
+
+echo $numbers[0];
+echo "&lt;br&gt;";
+echo $numbers[2];
+?&gt;
+            </div>
+
+            <h4>6.2 Асоціативний масив</h4>
+            <p>У PHP часто використовують асоціативні масиви, де замість індексів є ключі.</p>
+
+            <div class="code-block">
+&lt;?php
+$user = [
+    "name" =&gt; "Віталік",
+    "age" =&gt; 18,
+    "city" =&gt; "Львів"
+];
+
+echo $user["name"];
+?&gt;
+            </div>
+
+            <h4>6.3 Перебір масиву</h4>
+            <div class="code-block">
+&lt;?php
+$users = ["Іван", "Марія", "Олег"];
+
+foreach ($users as $user) {
+    echo $user . "&lt;br&gt;";
+}
+?&gt;
+            </div>
+
+            <div class="practice-block">
+                <b>Практика:</b>
+                <ul>
+                    <li>створи масив із 5 чисел;</li>
+                    <li>виведи всі елементи;</li>
+                    <li>створи асоціативний масив користувача;</li>
+                    <li>виведи ім’я та вік через ключі.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="course-section">
+            <h3>&#128230; 7. Функції</h3>
+            <p>Функції потрібні для того, щоб не дублювати один і той самий код. Один раз написав логіку — потім викликаєш її скільки треба.</p>
+
+            <h4>7.1 Проста функція</h4>
+            <div class="code-block">
+&lt;?php
+function sayHi() {
+    echo "Привіт!";
+}
+
+sayHi();
+?&gt;
+            </div>
+
+            <h4>7.2 Функція з параметрами</h4>
+            <div class="code-block">
+&lt;?php
+function add($a, $b) {
+    return $a + $b;
+}
+
+$result = add(5, 7);
+echo $result;
+?&gt;
+            </div>
+
+            <h4>7.3 Функція з рядком</h4>
+            <div class="code-block">
+&lt;?php
+function greet($name) {
+    return "Привіт, " . $name;
+}
+
+echo greet("Віталік");
+?&gt;
+            </div>
+
+            <div class="note">
+                <b>Пам’ятай:</b> хороша функція зазвичай робить одну конкретну задачу.
+            </div>
+        </section>
+
+        <section class="course-section">
+            <h3>&#128221; 8. Робота з формами: GET і POST</h3>
+            <p>Одна з найважливіших тем у PHP — це обробка форм. Саме через форми користувач вводить логін, пароль, ім’я, коментар, email та інші дані.</p>
+
+            <h4>8.1 Форма з методом POST</h4>
+            <div class="code-block">
+&lt;form method="post"&gt;
+    &lt;input type="text" name="username"&gt;
+    &lt;button type="submit"&gt;OK&lt;/button&gt;
+&lt;/form&gt;
+            </div>
+
+            <h4>8.2 Отримання значення з POST</h4>
+            <div class="code-block">
+&lt;?php
+if (isset($_POST["username"])) {
+    echo $_POST["username"];
+}
+?&gt;
+            </div>
+
+            <p><code>$_POST</code> — це масив, у якому PHP зберігає дані, відправлені через POST.</p>
+
+            <h4>8.3 GET</h4>
+            <p>Метод <code>GET</code> передає дані через адресний рядок.</p>
+
+            <div class="code-block">
+&lt;form method="get"&gt;
+    &lt;input type="text" name="city"&gt;
+    &lt;button type="submit"&gt;Надіслати&lt;/button&gt;
+&lt;/form&gt;
+
+&lt;?php
+if (isset($_GET["city"])) {
+    echo $_GET["city"];
+}
+?&gt;
+            </div>
+
+            <h4>8.4 Різниця між GET і POST</h4>
+            <ul>
+                <li><b>GET</b> — дані видно в URL</li>
+                <li><b>POST</b> — дані передаються приховано від адресного рядка</li>
+            </ul>
+
+            <div class="note">
+                <b>Порада:</b> для логіну, паролю, реєстрації та інших важливих форм зазвичай використовують саме <code>POST</code>.
+            </div>
+        </section>
+
+        <section class="course-section">
+            <h3>&#128172; 9. Робота з рядками та перевірка даних</h3>
+            <p>Після отримання даних з форми дуже часто треба їх перевірити або обробити.</p>
+
+            <h4>9.1 Перевірка, чи поле не пусте</h4>
+            <div class="code-block">
+&lt;?php
+if (!empty($_POST["username"])) {
+    echo "Поле заповнене";
+} else {
+    echo "Поле пусте";
+}
+?&gt;
+            </div>
+
+            <h4>9.2 Видалення зайвих пробілів</h4>
+            <div class="code-block">
+&lt;?php
+$name = trim($_POST["username"]);
+echo $name;
+?&gt;
+            </div>
+
+            <h4>9.3 Довжина рядка</h4>
+            <div class="code-block">
+&lt;?php
+$password = "123456";
+echo strlen($password);
+?&gt;
+            </div>
+
+            <p>Так можна, наприклад, перевіряти мінімальну довжину пароля.</p>
+        </section>
+
+        <section class="course-section">
+            <h3>&#128274; 10. Сесії та cookies</h3>
+            <p>Якщо треба запам’ятати користувача між сторінками, використовують <b>сесії</b> або <b>cookies</b>.</p>
+
+            <h4>10.1 Сесія</h4>
+            <div class="code-block">
+&lt;?php
+session_start();
+
+$_SESSION["username"] = "Віталік";
+echo $_SESSION["username"];
+?&gt;
+            </div>
+
+            <p>Сесія зберігає дані на сервері і часто використовується для авторизації.</p>
+
+            <h4>10.2 Cookie</h4>
+            <div class="code-block">
+&lt;?php
+setcookie("user", "Віталік", time() + 3600);
+?&gt;
+            </div>
+
+            <p>Cookie зберігаються в браузері користувача.</p>
+
+            <div class="note">
+                <b>Пам’ятай:</b> перед роботою з <code>$_SESSION</code> потрібно викликати <code>session_start()</code>.
+            </div>
+        </section>
+
+        <section class="course-section">
+            <h3>&#128187; 11. Підключення до MySQL</h3>
+            <p>Одне з найважливіших застосувань PHP — це робота з базами даних. Найчастіше PHP використовують разом із MySQL.</p>
+
+            <h4>11.1 Підключення через mysqli</h4>
+            <div class="code-block">
+&lt;?php
+$conn = new mysqli("localhost", "root", "", "test");
+
+if ($conn-&gt;connect_error) {
+    die("Помилка підключення");
+}
+
+echo "Підключено успішно";
+?&gt;
+            </div>
+
+            <p>Тут:
+            <br><code>localhost</code> — сервер
+            <br><code>root</code> — користувач
+            <br>порожній рядок — пароль
+            <br><code>test</code> — назва бази даних</p>
+
+            <div class="note">
+                <b>Увага:</b> у реальних проєктах логін, пароль і налаштування бази краще виносити окремо, а не тримати прямо в коді сторінки.
+            </div>
+        </section>
+
+        <section class="course-section">
+            <h3>&#128269; 12. Отримання даних із бази</h3>
+            <p>Після підключення до бази можна виконувати SQL-запити і виводити результат на сторінку.</p>
+
+            <h4>12.1 SELECT через PHP</h4>
+            <div class="code-block">
+&lt;?php
+$conn = new mysqli("localhost", "root", "", "test");
+
+$result = $conn-&gt;query("SELECT * FROM users");
+
+while ($row = $result-&gt;fetch_assoc()) {
+    echo $row["name"] . "&lt;br&gt;";
+}
+?&gt;
+            </div>
+
+            <p>Тут ми:
+            <br>— підключилися до бази
+            <br>— виконали SQL-запит
+            <br>— по черзі вивели всі імена з таблиці <code>users</code></p>
+
+            <h4>12.2 Додавання запису</h4>
+            <div class="code-block">
+&lt;?php
+$conn = new mysqli("localhost", "root", "", "test");
+
+$sql = "INSERT INTO users (name, age) VALUES ('Іван', 20)";
+$conn-&gt;query($sql);
+?&gt;
+            </div>
+
+            <p>Так PHP може не тільки читати, а й додавати дані в MySQL.</p>
+        </section>
+
+        <section class="course-section">
+            <h3>&#9888; 13. Типові помилки новачків</h3>
+            <ul class="mistake-list">
+                <li><b>Забутий знак <code>$</code></b> перед змінною.</li>
+                <li><b>Плутанина між лапками</b> і синтаксисом PHP.</li>
+                <li><b>Спроба відкрити PHP-файл без сервера</b> — код не виконається правильно.</li>
+                <li><b>Немає перевірки <code>isset()</code></b> перед використанням <code>$_POST</code> або <code>$_GET</code>.</li>
+                <li><b>Проблеми з підключенням до MySQL</b> — неправильна назва бази, логін або пароль.</li>
+                <li><b>Небезпечна робота з SQL</b> — без перевірки та захисту можна отримати проблеми з безпекою.</li>
+            </ul>
+
+            <div class="note">
+                <b>Порада:</b> у PHP дуже важливо не просто “щоб працювало”, а ще й перевіряти дані, які приходять від користувача.
+            </div>
+        </section>
+
+        <section class="course-section">
+            <h3>&#128218; 14. Практичні задачі для закріплення</h3>
+
+            <h4>Після теми «Змінні та умови»</h4>
+            <ol>
+                <li>Створи змінні для імені, віку та міста.</li>
+                <li>Виведи їх через <code>echo</code>.</li>
+                <li>Перевір, чи людина повнолітня.</li>
+            </ol>
+
+            <h4>Після теми «Цикли та масиви»</h4>
+            <ol>
+                <li>Створи масив із 5 імен.</li>
+                <li>Виведи їх через <code>foreach</code>.</li>
+                <li>Створи асоціативний масив користувача і виведи дані.</li>
+            </ol>
+
+            <h4>Після теми «Функції»</h4>
+            <ol>
+                <li>Створи функцію привітання.</li>
+                <li>Створи функцію для додавання двох чисел.</li>
+                <li>Створи функцію, яка повертає текст з ім’ям користувача.</li>
+            </ol>
+
+            <h4>Після теми «Форми»</h4>
+            <ol>
+                <li>Створи форму з полем імені.</li>
+                <li>Після відправки виведи введений текст.</li>
+                <li>Перевір, чи поле не пусте.</li>
+            </ol>
+
+            <h4>Після теми «MySQL»</h4>
+            <ol>
+                <li>Підключись до бази даних.</li>
+                <li>Виведи список користувачів.</li>
+                <li>Додай нового користувача через SQL-запит у PHP.</li>
+            </ol>
+        </section>
+
+        <section class="course-section">
+            <h3>&#128640; 15. Міні-проєкти для початківця</h3>
+            <p>Після проходження цього курсу можна вже перейти до перших невеликих, але корисних проєктів.</p>
+
+            <ul>
+                <li><b>Форма реєстрації</b> — ім’я, email, пароль.</li>
+                <li><b>Список користувачів</b> — вивід даних із MySQL.</li>
+                <li><b>Гостьова книга</b> — введення повідомлення і показ на сторінці.</li>
+                <li><b>Простий блог</b> — заголовок, текст, список постів.</li>
+                <li><b>Сторінка авторизації</b> — логін через форму і збереження в сесії.</li>
+            </ul>
+
+            <div class="result-box">
+                <b>Що далі?</b> Після цього курсу логічно переходити до безпечної роботи з базою, prepared statements, MVC, Laravel та повноцінних веб-застосунків.
+            </div>
+        </section>
+
+        <section class="test-button-section">
+            <a href="/test/php" class="test-btn">Пройти Тест на Перевірку Знань</a>
+        </section>
+    </main>
+
+    <footer>
+        <p style="text-align: center; padding: 20px; color: #777;">&copy; 2025 Проєкт студента ДМТК.</p>
+    </footer>
+</body>
+</html>

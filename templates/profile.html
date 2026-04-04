@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профіль</title>
+    <link rel="stylesheet" href="/static/style.css?v=5">
+</head>
+<body>
+    <header class="navbar">
+        <div class="container header-content">
+            <h1 class="logo">Коледж</h1>
+            <nav>
+                <a href="/" class="nav-link">Головна</a>
+                <a href="/courses" class="nav-link">Курси</a>
+                <a href="/profile" class="nav-link active">Профіль</a>
+                <a href="/logout" class="auth-btn">Вийти</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container profile-page">
+        <section class="profile-top-card">
+            <div class="profile-top-left">
+                <div class="profile-avatar">
+                    {{ profile_user["username"][0].upper() if profile_user and profile_user["username"] else "U" }}
+                </div>
+
+                <div class="profile-main-info">
+                    <h2 class="profile-page-title">Профіль користувача</h2>
+                    <p class="profile-subtitle">Тут зберігаються твої результати, прогрес і статистика навчання</p>
+                    <p><strong>Нікнейм:</strong> <span id="current-username">{{ profile_user["username"] }}</span></p>
+                    <p><strong>Email:</strong> {{ profile_user["email"] }}</p>
+                    <p><strong>Дата реєстрації:</strong> {{ profile_user["created_at"] }}</p>
+                </div>
+            </div>
+
+            <div class="profile-top-right">
+                <a href="/courses" class="profile-courses-btn">До курсів</a>
+            </div>
+        </section>
+
+        <section class="profile-edit-section">
+            <div class="profile-edit-card">
+                <h3>Змінити нікнейм</h3>
+
+                <form id="username-form">
+                    <label for="new_username">Новий нікнейм</label>
+                    <input
+                        type="text"
+                        id="new_username"
+                        name="new_username"
+                        value="{{ profile_user['username'] }}"
+                        required
+                    >
+
+                    <p id="username-message" class="form-message error-message" style="display:none;"></p>
+
+                    <button type="submit">Оновити нікнейм</button>
+                </form>
+            </div>
+
+            <div class="profile-progress-card">
+                <h3>Загальний прогрес</h3>
+                <p class="progress-text">Завершено курсів: <strong>{{ completed_courses }}/{{ total_courses }}</strong></p>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" data-progress="{{ progress_percent }}"></div>
+                </div>
+
+                <p class="progress-percent">{{ progress_percent }}%</p>
+            </div>
+        </section>
+
+        <section class="profile-stats-section">
+            <div class="profile-stats-grid">
+                <div class="profile-stat-card">
+                    <div class="profile-stat-number">{{ total_tests }}</div>
+                    <div class="profile-stat-label">Пройдено тестів</div>
+                </div>
+
+                <div class="profile-stat-card">
+                    <div class="profile-stat-number">{{ avg_score }}%</div>
+                    <div class="profile-stat-label">Середній результат</div>
+                </div>
+
+                <div class="profile-stat-card">
+                    <div class="profile-stat-number">{{ best_score }}%</div>
+                    <div class="profile-stat-label">Кращий результат</div>
+                </div>
+
+                <div class="profile-stat-card">
+                    <div class="profile-stat-number">{{ completed_courses }}/{{ total_courses }}</div>
+                    <div class="profile-stat-label">Курсів завершено</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="profile-results-section">
+            <div class="profile-results-header">
+                <h3>Останні результати</h3>
+                <p>Тут видно твої останні пройдені тести</p>
+            </div>
+
+            {% if recent_results %}
+                <div class="profile-results-grid">
+                    {% for r in recent_results %}
+                    <div class="profile-result-card">
+                        <div class="profile-result-top">
+                            <h4>{{ r["title"] }}</h4>
+                            <span class="profile-result-badge">
+                                {{ ((r["score"] / r["total"]) * 100) | round(1) }}%
+                            </span>
+                        </div>
+
+                        <div class="profile-result-body">
+                            <p><strong>Результат:</strong> {{ r["score"] }}/{{ r["total"] }}</p>
+                            <p><strong>Дата:</strong> {{ r["passed_at"] }}</p>
+                            <a href="/{{ r['slug'] }}" class="profile-open-course">Відкрити курс</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="profile-empty-card">
+                    <h4>Поки що немає жодного тесту</h4>
+                    <p>Пройди будь-який курс і виконай тест — результат з’явиться тут.</p>
+                </div>
+            {% endif %}
+        </section>
+    </main>
+
+    <script>
+        const usernameForm = document.getElementById("username-form");
+        const usernameMessage = document.getElementById("username-message");
+        const currentUsername = document.getElementById("current-username");
+
+        usernameForm.addEventListener("submit", async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(usernameForm);
+
+            const response = await fetch("/profile/update-username", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+
+            usernameMessage.style.display = "block";
+
+            if (data.ok) {
+                usernameMessage.className = "form-message success-message";
+                usernameMessage.textContent = data.message;
+                currentUsername.textContent = document.getElementById("new_username").value;
+            } else {
+                usernameMessage.className = "form-message error-message";
+                usernameMessage.textContent = data.message;
+            }
+        });
+    </script>
+    <script>
+    const bars = document.querySelectorAll(".progress-fill");
+
+    bars.forEach(bar => {
+        const value = bar.getAttribute("data-progress");
+
+        bar.style.width = "0%";
+
+        setTimeout(() => {
+            bar.style.width = value + "%";
+        }, 100);
+    });
+</script>
+</body>
+</html>

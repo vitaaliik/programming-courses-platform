@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вхід</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header class="navbar">
+        <div class="container header-content">
+            <h1 class="logo">Коледж</h1>
+            <nav>
+                <a href="/" class="nav-link">Головна</a>
+                <a href="/courses" class="nav-link">Курси</a>
+
+                {% if username %}
+                    <a href="/profile" class="nav-link">Профіль</a>
+                    <a href="/logout" class="auth-btn">Вийти</a>
+                {% else %}
+                    <a href="/auth" class="auth-btn">Реєстрація</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="auth-container">
+        <div class="auth-box">
+            <h2>Вхід</h2>
+
+            <form id="login-form">
+                <label for="email">Пошта</label>
+                <input type="text" id="email" name="email" required>
+
+                <label for="password">Пароль</label>
+                <input type="password" id="password" name="password" required>
+
+                <p id="login-message" class="form-message error-message" style="display:none;"></p>
+
+                <button type="submit">Увійти</button>
+            </form>
+
+            <p class="register-link">
+                Ще не зареєстровані?
+                <a href="/auth">Реєстрація</a>
+            </p>
+
+            <p class="register-link">
+                <a href="/forgot-password">Забули пароль?</a>
+            </p>
+        </div>
+    </main>
+
+    <script>
+        const loginForm = document.getElementById("login-form");
+        const loginMessage = document.getElementById("login-message");
+
+        loginForm.addEventListener("submit", async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(loginForm);
+
+            const response = await fetch("/login", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.ok) {
+                window.location.href = data.redirect;
+            } else {
+                loginMessage.style.display = "block";
+                loginMessage.textContent = data.message;
+            }
+        });
+    </script>
+</body>
+</html>

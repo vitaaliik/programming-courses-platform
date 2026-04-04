@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Головна</title>
+    <link rel="stylesheet" href="/static/style.css?v=8">
+</head>
+<body>
+    <header class="navbar">
+        <div class="container header-content">
+            <h1 class="logo">Коледж</h1>
+            <nav>
+                <a href="/" class="nav-link active">Головна</a>
+                <a href="/courses" class="nav-link">Курси</a>
+
+                {% if username %}
+                    {% if role == "admin" %}
+                        <a href="/admin" class="nav-link">Адмінка</a>
+                    {% else %}
+                        <a href="/profile" class="nav-link">Профіль</a>
+                    {% endif %}
+                    <a href="/logout" class="auth-btn">Вийти</a>
+                {% else %}
+                    <a href="/auth" class="auth-btn">Вхід / Реєстрація</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="hero-section">
+            <div class="college-title-box">
+                <h2>{{ site_content["hero_title"] }}</h2>
+                <p>{{ site_content["hero_subtitle"] }}</p>
+            </div>
+
+            <div class="story-content">
+                <h3>{{ site_content["about_title"] }}</h3>
+                <p>{{ site_content["about_text_1"] }}</p>
+                <p>{{ site_content["about_text_2"] }}</p>
+
+                <h3>{{ site_content["audience_title"] }}</h3>
+                <ul>
+                    <li>{{ site_content["audience_item_1"] }}</li>
+                    <li>{{ site_content["audience_item_2"] }}</li>
+                    <li>{{ site_content["audience_item_3"] }}</li>
+                    <li>{{ site_content["audience_item_4"] }}</li>
+                </ul>
+
+                <h3>{{ site_content["features_title"] }}</h3>
+                <ul>
+                    <li>{{ site_content["features_item_1"] }}</li>
+                    <li>{{ site_content["features_item_2"] }}</li>
+                    <li>{{ site_content["features_item_3"] }}</li>
+                    <li>{{ site_content["features_item_4"] }}</li>
+                    <li>{{ site_content["features_item_5"] }}</li>
+                </ul>
+
+                <h3>{{ site_content["college_title"] }}</h3>
+                <p>{{ site_content["college_text_1"] }}</p>
+                <p>{{ site_content["college_text_2"] }}</p>
+
+                <h3>{{ site_content["creator_title"] }}</h3>
+                <p>{{ site_content["creator_text"] }}</p>
+
+                <h3>{{ site_content["skills_title"] }}</h3>
+                <p>{{ site_content["skills_text_1"] }}</p>
+                <p>{{ site_content["skills_text_2"] }}</p>
+
+                <h3>{{ site_content["importance_title"] }}</h3>
+                <p>{{ site_content["importance_text_1"] }}</p>
+                <p>{{ site_content["importance_text_2"] }}</p>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

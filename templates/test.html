@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ course_title }}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <main class="test-page">
+        <div class="test-container">
+            <h1>{{ course_title }}</h1>
+            <p class="subtitle">Оберіть правильні відповіді та натисніть кнопку внизу.</p>
+
+            <form method="post" action="/test/{{ course_name }}">
+                {% for q in questions %}
+                <div class="question-card">
+                    <h3>{{ loop.index }}. {{ q.question }}</h3>
+
+                    <div class="options">
+                        {% for option in q.options %}
+                        <label class="option-item">
+                            <input type="radio" name="{{ q.id }}" value="{{ option }}">
+                            <span>{{ option }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+
+                <button type="submit" class="submit-btn">Завершити тест</button>
+            </form>
+        </div>
+    </main>
+</body>
+</html>
