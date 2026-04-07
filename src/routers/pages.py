@@ -30,7 +30,7 @@ async def courses_page(request: Request):
     return render_page(request, "courses.html")
 
 
-@router.get("/{page}", response_class=HTMLResponse)
+@router.get("/course-page/{page}", response_class=HTMLResponse)
 async def render_lang_page(page: str, request: Request):
     template = PAGES.get(page)
 
