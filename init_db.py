@@ -22,6 +22,7 @@ def init_db() -> None:
 
     cursor.execute("PRAGMA foreign_keys = ON;")
 
+    # USERS
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -33,6 +34,7 @@ def init_db() -> None:
         )
     """)
 
+    # COURSES
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS courses (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -44,6 +46,31 @@ def init_db() -> None:
         )
     """)
 
+    # Додаємо колонки якщо їх нема
+    try:
+        cursor.execute("ALTER TABLE courses ADD COLUMN page_title TEXT")
+    except sqlite3.OperationalError:
+        pass
+
+    try:
+        cursor.execute("ALTER TABLE courses ADD COLUMN page_subtitle TEXT")
+    except sqlite3.OperationalError:
+        pass
+
+    # COURSE SECTIONS
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS course_sections (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            course_id INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            content_html TEXT NOT NULL,
+            sort_order INTEGER NOT NULL DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+        )
+    """)
+
+    # TEST RESULTS
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS test_results (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -57,6 +84,7 @@ def init_db() -> None:
         )
     """)
 
+    # PASSWORD RESET
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS password_resets (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -67,6 +95,7 @@ def init_db() -> None:
         )
     """)
 
+    # SITE CONTENT
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS site_content (
             id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -107,11 +136,13 @@ def init_db() -> None:
         )
     """)
 
+    # COURSES INSERT
     cursor.executemany("""
         INSERT OR IGNORE INTO courses (slug, title, description, content_file)
         VALUES (?, ?, ?, ?)
     """, courses_data)
 
+    # SITE CONTENT DEFAULT
     cursor.execute("""
         INSERT OR IGNORE INTO site_content (
             id,
@@ -156,36 +187,36 @@ def init_db() -> None:
             'Навчальна платформа для вивчення програмування від основ до практики',
 
             'Про сайт',
-            'Цей веб-сайт створений як навчальна платформа для студентів, які хочуть вивчати програмування з нуля. Тут зібрані базові курси з популярних мов програмування, які дозволяють поступово перейти від простих тем до більш складних.',
-            'Основна мета сайту — допомогти студентам швидко розібратись у фундаментальних поняттях програмування та отримати практичні навички, необхідні для подальшого розвитку в IT-сфері.',
+            'Навчальна платформа для студентів...',
+            'Основна мета — навчити програмуванню.',
 
             'Кому підходить цей сайт',
-            'Студентам, які тільки починають вивчати програмування',
-            'Тим, хто хоче змінити сферу діяльності і перейти в IT',
-            'Учням, які хочуть отримати додаткову практику',
-            'Новачкам, які хочуть зрозуміти основи веб-розробки',
+            'Студентам',
+            'Новачкам',
+            'Тим хто переходить в IT',
+            'Учням',
 
             'Що є на сайті',
-            'Курси з програмування (C++, C#, Python, Java, JavaScript, HTML/CSS, PHP, SQL)',
-            'Пояснення теорії простими словами',
-            'Приклади коду для кожної теми',
-            'Практичні завдання для закріплення знань',
-            'Тести для перевірки рівня знань',
+            'Курси',
+            'Теорія',
+            'Практика',
+            'Тести',
+            'Приклади',
 
             'Про коледж',
-            'Дрогобицький механіко-технологічний коледж є одним із провідних навчальних закладів, який готує спеціалістів у сфері технологій, програмування та механіки.',
-            'Коледж надає сучасну освіту, поєднуючи теоретичні знання з практичними навичками, що дозволяє студентам бути конкурентоспроможними на ринку праці.',
+            'Коледж опис',
+            'Освіта',
 
             'Хто створив цей сайт',
-            'Сайт розроблений студентом коледжу в рамках навчального проєкту. Метою створення було закріплення знань у веб-розробці та створення корисного ресурсу для інших студентів.',
+            'Студент',
 
             'Звідки навички',
-            'Під час розробки сайту були використані знання з HTML, CSS та основ програмування, отримані під час навчання, а також самостійного вивчення сучасних технологій.',
-            'Проєкт включає роботу з версткою, структурою сайту, стилями, логікою курсів та організацією навчального матеріалу.',
+            'Навчання',
+            'Практика',
 
-            'Чому цей проєкт важливий',
-            'Сайт є не лише навчальним проєктом, а й корисним інструментом для студентів, які хочуть розпочати свій шлях у програмуванні.',
-            'Він дозволяє систематизувати знання, отримати практику та краще зрозуміти, як працюють реальні веб-застосунки.'
+            'Чому це важливо',
+            'Дає знання',
+            'Дає практику'
         )
     """)
 

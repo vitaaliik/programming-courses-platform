@@ -42,15 +42,15 @@ async def submit_test(request: Request, course_name: str):
     save_result_if_logged_in(user_id, course_name, score, total)
 
     return templates.TemplateResponse(
-        "result.html",
-        {
-            "request": request,
-            "username": request.session.get("username"),
-            "role": request.session.get("role"),
-            "course_name": course_name,
-            "course_title": course["title"],
-            "score": score,
-            "total": total,
-            "details": detailed_results,
-        },
+    request,
+    "result.html",
+    {
+        "username": request.session.get("username"),
+        "role": request.session.get("role"),
+        "course_name": course_name,
+        "course_title": course["title"],
+        "score": score,
+        "total": total,
+        "details": detailed_results,
+    },
     )

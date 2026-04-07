@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ course["page_title"] or course["title"] }}</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <header class="navbar">
+        <div class="container header-content">
+            <h1 class="logo">{{ course["title"] }}</h1>
+            <nav>
+                <a href="/" class="nav-link active">Головна</a>
+                <a href="/courses" class="nav-link">Курси</a>
+                {% if username %}
+                <a href="/profile" class="nav-link">Профіль</a>
+                <a href="/logout" class="auth-btn">Вийти</a>
+                {% else %}
+                <a href="/auth" class="auth-btn">Вхід / Реєстрація</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="container course-main">
+        <div class="course-header">
+            <h2>{{ course["page_title"] or course["title"] }}</h2>
+            <p>{{ course["page_subtitle"] or course["description"] }}</p>
+        </div>
+
+        {% for section in sections %}
+        <section class="course-section">
+            <h3>{{ section["title"] }}</h3>
+            {{ section["content_html"] | safe }}
+        </section>
+        {% endfor %}
+
+        <section class="test-button-section">
+            <a href="/test/{{ course['slug'] }}" class="test-btn">Пройти Тест на Перевірку Знань</a>
+        </section>
+    </main>
+
+    <footer>
+        <p style="text-align: center; padding: 20px; color: #777;">&copy; 2025 Проєкт студента ДМТК.</p>
+    </footer>
+</body>
+</html>

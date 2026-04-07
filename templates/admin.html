@@ -192,6 +192,26 @@
         </section>
 
         <section class="admin-section">
+    <div class="admin-section-header">
+        <h3>Редагування курсів</h3>
+        <p>Вибери курс і перейди до його редагування</p>
+    </div>
+
+    <div class="admin-results-grid">
+        {% for course in courses %}
+        <div class="admin-result-card">
+            <h4>{{ course["title"] }}</h4>
+            <p><strong>Slug:</strong> {{ course["slug"] }}</p>
+            <p><strong>Опис:</strong> {{ course["description"] }}</p>
+            <a href="/admin/course/{{ course['slug'] }}" class="auth-btn" style="display:inline-block; margin-top:10px;">
+                Редагувати курс
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+        <section class="admin-section">
             <div class="admin-section-header">
                 <h3>Користувачі</h3>
                 <p>Список усіх зареєстрованих користувачів і їх статистика</p>

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактор курсу</title>
+    <link rel="stylesheet" href="/static/style.css?v=32">
+
+    <!-- Quill -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+
+    <style>
+        .quill-editor {
+            background: #fff;
+            color: #111;
+            border-radius: 10px;
+        }
+
+        .ql-toolbar.ql-snow {
+            border-radius: 10px 10px 0 0;
+            background: #f8f8f8;
+        }
+
+        .ql-container.ql-snow {
+            min-height: 260px;
+            border-radius: 0 0 10px 10px;
+            font-size: 16px;
+        }
+
+        .editor-help {
+            color: #999;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        .section-card {
+            padding: 20px;
+            border: 1px solid #2a2a2a;
+            border-radius: 14px;
+            margin-bottom: 24px;
+            background: rgba(255,255,255,0.02);
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <div class="container header-content">
+            <h1 class="logo">Редактор курсу</h1>
+            <nav>
+                <a href="/" class="nav-link">Головна</a>
+                <a href="/courses" class="nav-link">Курси</a>
+                <a href="/admin" class="nav-link active">Адмінка</a>
+                <a href="/logout" class="auth-btn">Вийти</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container admin-page">
+        <section class="admin-top-card">
+            <h2 class="admin-title">Редагування курсу: {{ course["title"] }}</h2>
+            <p class="admin-subtitle">Тут можна змінювати заголовок, підзаголовок і секції курсу</p>
+        </section>
+
+        <section class="admin-section">
+            <div class="admin-section-header">
+                <h3>Основна інформація курсу</h3>
+            </div>
+
+            <form id="course-main-form" class="admin-form-grid">
+                <div class="admin-form-group">
+                    <label for="page_title">Заголовок сторінки</label>
+                    <input type="text" id="page_title" name="page_title" value="{{ course['page_title'] or '' }}" required>
+                </div>
+
+                <div class="admin-form-group admin-form-group-full">
+                    <label for="page_subtitle">Підзаголовок сторінки</label>
+                    <textarea id="page_subtitle" name="page_subtitle" rows="3" required>{{ course["page_subtitle"] or '' }}</textarea>
+                </div>
+
+                <div class="admin-form-group admin-form-group-full">
+                    <p id="course-main-message" class="form-message error-message" style="display:none;"></p>
+                    <button type="submit" class="admin-save-btn">Зберегти основну інформацію</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="admin-section">
+            <div class="admin-section-header">
+                <h3>Секції курсу</h3>
+            </div>
+
+            {% for section in sections %}
+            <div class="section-card">
+                <form class="course-section-form admin-form-grid" data-section-id="{{ section['id'] }}">
+                    <div class="admin-form-group">
+                        <label>Порядок</label>
+                        <input type="number" name="sort_order" value="{{ section['sort_order'] }}" required>
+                    </div>
+
+                    <div class="admin-form-group admin-form-group-full">
+                        <label>Заголовок секції</label>
+                        <input type="text" name="title" value="{{ section['title'] }}" required>
+                    </div>
+
+                    <div class="admin-form-group admin-form-group-full">
+                        <label>Контент секції</label>
+
+                        <div
+                            class="quill-editor existing-editor"
+                            id="editor-{{ section['id'] }}"
+                            data-hidden-input="content-html-{{ section['id'] }}"
+                        >{{ section["content_html"] | safe }}</div>
+
+                        <input
+                            type="hidden"
+                            id="content-html-{{ section['id'] }}"
+                            name="content_html"
+                        >
+
+                        <div class="editor-help">
+                            Можна форматувати текст як у Word: заголовки, жирний, списки, цитати, код.
+                        </div>
+                    </div>
+
+                    <div class="admin-form-group admin-form-group-full">
+                        <p class="form-message" style="display:none;"></p>
+                        <button type="submit" class="admin-save-btn">Зберегти секцію</button>
+                        <button type="button" class="auth-btn delete-section-btn" data-section-id="{{ section['id'] }}" style="margin-left:10px;">
+                            Видалити секцію
+                        </button>
+                    </div>
+                </form>
+            </div>
+            {% endfor %}
+        </section>
+
+        <section class="admin-section">
+            <div class="admin-section-header">
+                <h3>Додати нову секцію</h3>
+            </div>
+
+            <form id="add-section-form" class="admin-form-grid">
+                <div class="admin-form-group">
+                    <label for="new_sort_order">Порядок</label>
+                    <input type="number" id="new_sort_order" name="sort_order" value="100" required>
+                </div>
+
+                <div class="admin-form-group admin-form-group-full">
+                    <label for="new_title">Заголовок секції</label>
+                    <input type="text" id="new_title" name="title" required>
+                </div>
+
+                <div class="admin-form-group admin-form-group-full">
+                    <label>Контент секції</label>
+
+                    <div
+                        class="quill-editor"
+                        id="new-section-editor"
+                        data-hidden-input="new-content-html"
+                    ></div>
+
+                    <input
+                        type="hidden"
+                        id="new-content-html"
+                        name="content_html"
+                    >
+
+                    <div class="editor-help">
+                        Напиши текст і відформатуй його кнопками зверху.
+                    </div>
+                </div>
+
+                <div class="admin-form-group admin-form-group-full">
+                    <p id="add-section-message" class="form-message error-message" style="display:none;"></p>
+                    <button type="submit" class="admin-save-btn">Додати секцію</button>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <!-- Quill -->
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+
+    <script>
+        const slug = "{{ course['slug'] }}";
+
+        const quillOptions = {
+            theme: "snow",
+            modules: {
+                toolbar: [
+                    [{ header: [2, 3, 4, false] }],
+                    ["bold", "italic", "underline", "strike"],
+                    [{ list: "ordered" }, { list: "bullet" }],
+                    ["blockquote", "code-block"],
+                    [{ align: [] }],
+                    ["link", "clean"]
+                ]
+            }
+        };
+
+        const editors = {};
+
+        document.querySelectorAll(".quill-editor").forEach((editorElement) => {
+            const quill = new Quill(editorElement, quillOptions);
+            editors[editorElement.id] = quill;
+        });
+
+        function syncEditorToHiddenInput(editorElementId) {
+            const editorElement = document.getElementById(editorElementId);
+            const hiddenInputId = editorElement.dataset.hiddenInput;
+            const hiddenInput = document.getElementById(hiddenInputId);
+            const quill = editors[editorElementId];
+
+            hiddenInput.value = quill.root.innerHTML;
+        }
+
+        const courseMainForm = document.getElementById("course-main-form");
+        const courseMainMessage = document.getElementById("course-main-message");
+
+        courseMainForm.addEventListener("submit", async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(courseMainForm);
+
+            const response = await fetch(`/admin/course/${slug}/update-main`, {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+
+            courseMainMessage.style.display = "block";
+            courseMainMessage.className = data.ok ? "form-message success-message" : "form-message error-message";
+            courseMainMessage.textContent = data.message;
+        });
+
+        document.querySelectorAll(".course-section-form").forEach(form => {
+            form.addEventListener("submit", async function(e) {
+                e.preventDefault();
+
+                const sectionId = form.dataset.sectionId;
+                const message = form.querySelector(".form-message");
+
+                syncEditorToHiddenInput(`editor-${sectionId}`);
+
+                const formData = new FormData(form);
+
+                const response = await fetch(`/admin/course/section/${sectionId}/update`, {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                message.style.display = "block";
+                message.className = data.ok ? "form-message success-message" : "form-message error-message";
+                message.textContent = data.message;
+            });
+        });
+
+        document.querySelectorAll(".delete-section-btn").forEach(button => {
+            button.addEventListener("click", async function() {
+                const sectionId = button.dataset.sectionId;
+
+                const response = await fetch(`/admin/course/section/${sectionId}/delete`, {
+                    method: "POST"
+                });
+
+                const data = await response.json();
+
+                if (data.ok) {
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            });
+        });
+
+        const addSectionForm = document.getElementById("add-section-form");
+        const addSectionMessage = document.getElementById("add-section-message");
+
+        addSectionForm.addEventListener("submit", async function(e) {
+            e.preventDefault();
+
+            syncEditorToHiddenInput("new-section-editor");
+
+            const formData = new FormData(addSectionForm);
+
+            const response = await fetch(`/admin/course/${slug}/section/add`, {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+
+            addSectionMessage.style.display = "block";
+            addSectionMessage.className = data.ok ? "form-message success-message" : "form-message error-message";
+            addSectionMessage.textContent = data.message;
+
+            if (data.ok) {
+                setTimeout(() => location.reload(), 500);
+            }
+        });
+    </script>
+</body>
+</html>

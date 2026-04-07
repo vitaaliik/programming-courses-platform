@@ -6,6 +6,14 @@ from src.services.admin_service import (
     make_user_admin_by_email,
     update_home_page_content,
 )
+from src.services.course_content_service import (
+    add_new_course_section,
+    get_course_editor_data,
+    get_courses_for_admin,
+    remove_course_section,
+    save_course_main_info,
+    save_course_section,
+)
 from src.utils.page_renderer import render_page
 
 router = APIRouter()
@@ -22,7 +30,9 @@ async def admin_page(request: Request):
         return RedirectResponse(url="/profile", status_code=303)
 
     data = get_admin_dashboard_data()
-    return render_page(request, "admin.html", **data)
+    courses = get_courses_for_admin()
+
+    return render_page(request, "admin.html", **data, courses=courses)
 
 
 @router.post("/admin/update-home")
@@ -91,6 +101,87 @@ async def update_home_content(
 
     update_home_page_content(data)
     return JSONResponse({"ok": True, "message": "Головну сторінку успішно оновлено."})
+
+
+@router.get("/admin/course/{slug}", response_class=HTMLResponse)
+async def edit_course_page(request: Request, slug: str):
+    user_id = request.session.get("user_id")
+
+    if not user_id:
+        return RedirectResponse(url="/login", status_code=303)
+
+    if request.session.get("role") != "admin":
+        return RedirectResponse(url="/profile", status_code=303)
+
+    course = get_course_editor_data(slug)
+    if not course:
+        return RedirectResponse(url="/admin", status_code=303)
+
+    return render_page(
+        request,
+        "admin_course_editor.html",
+        course=course,
+        sections=course["sections"],
+    )
+
+
+@router.post("/admin/course/{slug}/update-main")
+async def update_course_main(
+    request: Request,
+    slug: str,
+    page_title: str = Form(...),
+    page_subtitle: str = Form(...),
+):
+    if request.session.get("role") != "admin":
+        return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
+
+    ok = save_course_main_info(slug, page_title, page_subtitle)
+    if not ok:
+        return JSONResponse({"ok": False, "message": "Курс не знайдено."})
+
+    return JSONResponse({"ok": True, "message": "Основну інформацію курсу оновлено."})
+
+
+@router.post("/admin/course/{slug}/section/add")
+async def add_course_section(
+    request: Request,
+    slug: str,
+    title: str = Form(...),
+    content_html: str = Form(...),
+    sort_order: int = Form(...),
+):
+    if request.session.get("role") != "admin":
+        return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
+
+    ok = add_new_course_section(slug, title, content_html, sort_order)
+    if not ok:
+        return JSONResponse({"ok": False, "message": "Не вдалося додати секцію."})
+
+    return JSONResponse({"ok": True, "message": "Нову секцію додано."})
+
+
+@router.post("/admin/course/section/{section_id}/update")
+async def update_section(
+    request: Request,
+    section_id: int,
+    title: str = Form(...),
+    content_html: str = Form(...),
+    sort_order: int = Form(...),
+):
+    if request.session.get("role") != "admin":
+        return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
+
+    save_course_section(section_id, title, content_html, sort_order)
+    return JSONResponse({"ok": True, "message": "Секцію оновлено."})
+
+
+@router.post("/admin/course/section/{section_id}/delete")
+async def delete_section(request: Request, section_id: int):
+    if request.session.get("role") != "admin":
+        return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
+
+    remove_course_section(section_id)
+    return JSONResponse({"ok": True, "message": "Секцію видалено."})
 
 
 @router.get("/make-admin")
