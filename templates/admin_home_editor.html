@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактор головної</title>
+    <link rel="stylesheet" href="/static/style.css?v=81">
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+
+    <style>
+        .quill-editor {
+            background: #fff;
+            color: #111;
+            border-radius: 10px;
+        }
+
+        .ql-toolbar.ql-snow {
+            border-radius: 10px 10px 0 0;
+            background: #f8f8f8;
+        }
+
+        .ql-container.ql-snow {
+            min-height: 220px;
+            border-radius: 0 0 10px 10px;
+            font-size: 16px;
+        }
+
+        .block-card {
+            padding: 20px;
+            border: 1px solid #2a2a2a;
+            border-radius: 14px;
+            margin-bottom: 24px;
+            background: rgba(255,255,255,0.02);
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <div class="container header-content">
+            <h1 class="logo">Редактор головної</h1>
+            <nav>
+                <a href="/" class="nav-link">Головна</a>
+                <a href="/courses" class="nav-link">Курси</a>
+                <a href="/admin" class="nav-link">Адмінка</a>
+                <a href="/admin/home" class="nav-link active">Головна сторінка</a>
+                <a href="/logout" class="auth-btn">Вийти</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container admin-page">
+        <section class="admin-top-card">
+            <h2 class="admin-title">Редагування головної сторінки</h2>
+            <p class="admin-subtitle">Hero-блок і великі блоки головної через редактор як у курсах</p>
+        </section>
+
+        <section class="admin-section">
+            <div class="admin-section-header">
+                <h3>Hero-блок</h3>
+            </div>
+
+            <form id="hero-form" class="admin-form-grid">
+                <div class="admin-form-group">
+                    <label>Головний заголовок</label>
+                    <input type="text" name="hero_title" value="{{ site_content['hero_title'] }}" required>
+                </div>
+
+                <div class="admin-form-group">
+                    <label>Підзаголовок</label>
+                    <input type="text" name="hero_subtitle" value="{{ site_content['hero_subtitle'] }}" required>
+                </div>
+
+                <div class="admin-form-group admin-form-group-full">
+                    <p id="hero-message" class="form-message error-message" style="display:none;"></p>
+                    <button type="submit" class="admin-save-btn">Зберегти hero</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="admin-section">
+            <div class="admin-section-header">
+                <h3>Додати новий блок</h3>
+            </div>
+
+            <form id="add-block-form" class="admin-form-grid">
+                <div class="admin-form-group">
+                    <label>Назва блоку</label>
+                    <input type="text" name="title" required>
+                </div>
+
+                <div class="admin-form-group">
+                    <label>Порядок</label>
+                    <input type="number" name="sort_order" value="100" required>
+                </div>
+
+                <div class="admin-form-group admin-form-group-full">
+                    <label>Контент блоку</label>
+                    <div class="quill-editor" id="new-home-block-editor" data-hidden-input="new-home-block-content"></div>
+                    <input type="hidden" id="new-home-block-content" name="content_html">
+                </div>
+
+                <div class="admin-form-group admin-form-group-full">
+                    <p id="add-block-message" class="form-message error-message" style="display:none;"></p>
+                    <button type="submit" class="admin-save-btn">Додати блок</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="admin-section">
+            <div class="admin-section-header">
+                <h3>Блоки головної сторінки</h3>
+            </div>
+
+            {% for block in home_blocks %}
+            <div class="block-card">
+                <form class="home-block-form admin-form-grid" data-block-id="{{ block['id'] }}">
+                    <div class="admin-form-group">
+                        <label>Назва блоку</label>
+                        <input type="text" name="title" value="{{ block['title'] }}" required>
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label>Порядок</label>
+                        <input type="number" name="sort_order" value="{{ block['sort_order'] }}" required>
+                    </div>
+
+                    <div class="admin-form-group admin-form-group-full">
+                        <label>Контент блоку</label>
+                        <div
+                            class="quill-editor"
+                            id="home-block-editor-{{ block['id'] }}"
+                            data-hidden-input="home-block-content-{{ block['id'] }}"
+                        >{{ block["content_html"] | safe }}</div>
+
+                        <input
+                            type="hidden"
+                            id="home-block-content-{{ block['id'] }}"
+                            name="content_html"
+                        >
+                    </div>
+
+                    <div class="admin-form-group admin-form-group-full">
+                        <p class="form-message" style="display:none;"></p>
+                        <button type="submit" class="admin-save-btn">Зберегти блок</button>
+                        <button
+                            type="button"
+                            class="btn-danger"
+                            data-block-id="{{ block['id'] }}"                       
+                        >
+                            Видалити блок
+                        </button>
+                    </div>
+                </form>
+            </div>
+            {% endfor %}
+        </section>
+    </main>
+
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+
+    <script>
+        const quillOptions = {
+            theme: "snow",
+            modules: {
+                toolbar: [
+                    [{ header: [2, 3, 4, false] }],
+                    ["bold", "italic", "underline", "strike"],
+                    [{ list: "ordered" }, { list: "bullet" }],
+                    ["blockquote"],
+                    ["code-block"],
+                    [{ align: [] }],
+                    ["link", "clean"]
+                ]
+            }
+        };
+
+        const editors = {};
+
+        document.querySelectorAll(".quill-editor").forEach((editorElement) => {
+            const quill = new Quill(editorElement, quillOptions);
+            editors[editorElement.id] = quill;
+        });
+
+        function syncEditorToHiddenInput(editorElementId) {
+            const editorElement = document.getElementById(editorElementId);
+            const hiddenInputId = editorElement.dataset.hiddenInput;
+            const hiddenInput = document.getElementById(hiddenInputId);
+            const quill = editors[editorElementId];
+
+            hiddenInput.value = quill.root.innerHTML;
+        }
+
+        const heroForm = document.getElementById("hero-form");
+        const heroMessage = document.getElementById("hero-message");
+
+        heroForm.addEventListener("submit", async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(heroForm);
+
+            const response = await fetch("/admin/home/update-hero", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+
+            heroMessage.style.display = "block";
+            heroMessage.className = data.ok ? "form-message success-message" : "form-message error-message";
+            heroMessage.textContent = data.message;
+        });
+
+        const addBlockForm = document.getElementById("add-block-form");
+        const addBlockMessage = document.getElementById("add-block-message");
+
+        addBlockForm.addEventListener("submit", async function(e) {
+            e.preventDefault();
+
+            syncEditorToHiddenInput("new-home-block-editor");
+
+            const formData = new FormData(addBlockForm);
+
+            const response = await fetch("/admin/home/block/add", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+
+            addBlockMessage.style.display = "block";
+            addBlockMessage.className = data.ok ? "form-message success-message" : "form-message error-message";
+            addBlockMessage.textContent = data.message;
+
+            if (data.ok) {
+                setTimeout(() => location.reload(), 500);
+            }
+        });
+
+        document.querySelectorAll(".home-block-form").forEach(form => {
+            form.addEventListener("submit", async function(e) {
+                e.preventDefault();
+
+                const blockId = form.dataset.blockId;
+                const message = form.querySelector(".form-message");
+
+                syncEditorToHiddenInput(`home-block-editor-${blockId}`);
+
+                const formData = new FormData(form);
+
+                const response = await fetch(`/admin/home/block/${blockId}/update`, {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                message.style.display = "block";
+                message.className = data.ok ? "form-message success-message" : "form-message error-message";
+                message.textContent = data.message;
+            });
+        });
+
+        document.querySelectorAll(".delete-home-block-btn").forEach(button => {
+            button.addEventListener("click", async function() {
+                const blockId = button.dataset.blockId;
+
+                const response = await fetch(`/admin/home/block/${blockId}/delete`, {
+                    method: "POST"
+                });
+
+                const data = await response.json();
+
+                if (data.ok) {
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

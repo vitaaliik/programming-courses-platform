@@ -2,17 +2,29 @@ from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 
 from src.services.admin_service import (
+    add_new_home_block,
     get_admin_dashboard_data,
+    get_home_editor_data,
     make_user_admin_by_email,
-    update_home_page_content,
+    remove_home_block,
+    save_home_block,
+    update_home_hero,
 )
 from src.services.course_content_service import (
     add_new_course_section,
+    create_new_course,
     get_course_editor_data,
     get_courses_for_admin,
+    remove_course,
     remove_course_section,
     save_course_main_info,
     save_course_section,
+)
+from src.services.test_service import (
+    add_new_test_question,
+    get_test_editor_data,
+    remove_test_question,
+    save_test_question,
 )
 from src.utils.page_renderer import render_page
 
@@ -35,72 +47,101 @@ async def admin_page(request: Request):
     return render_page(request, "admin.html", **data, courses=courses)
 
 
-@router.post("/admin/update-home")
-async def update_home_content(
+@router.get("/admin/home", response_class=HTMLResponse)
+async def edit_home_page(request: Request):
+    user_id = request.session.get("user_id")
+
+    if not user_id:
+        return RedirectResponse(url="/login", status_code=303)
+
+    if request.session.get("role") != "admin":
+        return RedirectResponse(url="/profile", status_code=303)
+
+    data = get_home_editor_data()
+    return render_page(request, "admin_home_editor.html", **data)
+
+
+@router.post("/admin/home/update-hero")
+async def update_home_hero_route(
     request: Request,
     hero_title: str = Form(...),
     hero_subtitle: str = Form(...),
-    about_title: str = Form(...),
-    about_text_1: str = Form(...),
-    about_text_2: str = Form(...),
-    audience_title: str = Form(...),
-    audience_item_1: str = Form(...),
-    audience_item_2: str = Form(...),
-    audience_item_3: str = Form(...),
-    audience_item_4: str = Form(...),
-    features_title: str = Form(...),
-    features_item_1: str = Form(...),
-    features_item_2: str = Form(...),
-    features_item_3: str = Form(...),
-    features_item_4: str = Form(...),
-    features_item_5: str = Form(...),
-    college_title: str = Form(...),
-    college_text_1: str = Form(...),
-    college_text_2: str = Form(...),
-    creator_title: str = Form(...),
-    creator_text: str = Form(...),
-    skills_title: str = Form(...),
-    skills_text_1: str = Form(...),
-    skills_text_2: str = Form(...),
-    importance_title: str = Form(...),
-    importance_text_1: str = Form(...),
-    importance_text_2: str = Form(...),
 ):
     if request.session.get("role") != "admin":
         return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
 
-    data = {
+    update_home_hero({
         "hero_title": hero_title,
         "hero_subtitle": hero_subtitle,
-        "about_title": about_title,
-        "about_text_1": about_text_1,
-        "about_text_2": about_text_2,
-        "audience_title": audience_title,
-        "audience_item_1": audience_item_1,
-        "audience_item_2": audience_item_2,
-        "audience_item_3": audience_item_3,
-        "audience_item_4": audience_item_4,
-        "features_title": features_title,
-        "features_item_1": features_item_1,
-        "features_item_2": features_item_2,
-        "features_item_3": features_item_3,
-        "features_item_4": features_item_4,
-        "features_item_5": features_item_5,
-        "college_title": college_title,
-        "college_text_1": college_text_1,
-        "college_text_2": college_text_2,
-        "creator_title": creator_title,
-        "creator_text": creator_text,
-        "skills_title": skills_title,
-        "skills_text_1": skills_text_1,
-        "skills_text_2": skills_text_2,
-        "importance_title": importance_title,
-        "importance_text_1": importance_text_1,
-        "importance_text_2": importance_text_2,
-    }
+    })
+    return JSONResponse({"ok": True, "message": "Hero-блок оновлено."})
 
-    update_home_page_content(data)
-    return JSONResponse({"ok": True, "message": "Головну сторінку успішно оновлено."})
+
+@router.post("/admin/home/block/add")
+async def add_home_block_route(
+    request: Request,
+    title: str = Form(...),
+    content_html: str = Form(...),
+    sort_order: int = Form(...),
+):
+    if request.session.get("role") != "admin":
+        return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
+
+    ok = add_new_home_block(title, content_html, sort_order)
+    if not ok:
+        return JSONResponse({"ok": False, "message": "Не вдалося додати блок."})
+
+    return JSONResponse({"ok": True, "message": "Блок додано."})
+
+
+@router.post("/admin/home/block/{block_id}/update")
+async def update_home_block_route(
+    request: Request,
+    block_id: int,
+    title: str = Form(...),
+    content_html: str = Form(...),
+    sort_order: int = Form(...),
+):
+    if request.session.get("role") != "admin":
+        return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
+
+    ok = save_home_block(block_id, title, content_html, sort_order)
+    if not ok:
+        return JSONResponse({"ok": False, "message": "Не вдалося оновити блок."})
+
+    return JSONResponse({"ok": True, "message": "Блок оновлено."})
+
+
+@router.post("/admin/home/block/{block_id}/delete")
+async def delete_home_block_route(request: Request, block_id: int):
+    if request.session.get("role") != "admin":
+        return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
+
+    remove_home_block(block_id)
+    return JSONResponse({"ok": True, "message": "Блок видалено."})
+
+
+@router.post("/admin/course/create")
+async def create_course_route(
+    request: Request,
+    slug: str = Form(...),
+    title: str = Form(...),
+    description: str = Form(...),
+):
+    if request.session.get("role") != "admin":
+        return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
+
+    result = create_new_course(slug, title, description)
+    return JSONResponse(result)
+
+
+@router.post("/admin/course/{slug}/delete")
+async def delete_course_route(request: Request, slug: str):
+    if request.session.get("role") != "admin":
+        return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
+
+    result = remove_course(slug)
+    return JSONResponse(result)
 
 
 @router.get("/admin/course/{slug}", response_class=HTMLResponse)
@@ -182,6 +223,118 @@ async def delete_section(request: Request, section_id: int):
 
     remove_course_section(section_id)
     return JSONResponse({"ok": True, "message": "Секцію видалено."})
+
+
+@router.get("/admin/tests/{slug}", response_class=HTMLResponse)
+async def edit_test_page(request: Request, slug: str):
+    user_id = request.session.get("user_id")
+
+    if not user_id:
+        return RedirectResponse(url="/login", status_code=303)
+
+    if request.session.get("role") != "admin":
+        return RedirectResponse(url="/profile", status_code=303)
+
+    test_data = get_test_editor_data(slug)
+    if not test_data:
+        return RedirectResponse(url="/admin", status_code=303)
+
+    return render_page(
+        request,
+        "admin_test_editor.html",
+        course_slug=slug,
+        course_title=test_data["title"],
+        questions=test_data["questions"],
+    )
+
+
+@router.post("/admin/tests/{slug}/question/add")
+async def add_test_question_route(
+    request: Request,
+    slug: str,
+    question: str = Form(...),
+    option_a: str = Form(...),
+    option_b: str = Form(...),
+    option_c: str = Form(...),
+    option_d: str = Form(...),
+    allow_multiple: int = Form(0),
+    is_a_correct: int = Form(0),
+    is_b_correct: int = Form(0),
+    is_c_correct: int = Form(0),
+    is_d_correct: int = Form(0),
+    sort_order: int = Form(...),
+):
+    if request.session.get("role") != "admin":
+        return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
+
+    ok = add_new_test_question(
+        slug,
+        question,
+        option_a,
+        option_b,
+        option_c,
+        option_d,
+        allow_multiple,
+        is_a_correct,
+        is_b_correct,
+        is_c_correct,
+        is_d_correct,
+        sort_order,
+    )
+
+    if not ok:
+        return JSONResponse({"ok": False, "message": "Не вдалося додати питання. Перевір правильні відповіді."})
+
+    return JSONResponse({"ok": True, "message": "Питання додано."})
+
+
+@router.post("/admin/tests/question/{question_id}/update")
+async def update_test_question_route(
+    request: Request,
+    question_id: int,
+    question: str = Form(...),
+    option_a: str = Form(...),
+    option_b: str = Form(...),
+    option_c: str = Form(...),
+    option_d: str = Form(...),
+    allow_multiple: int = Form(0),
+    is_a_correct: int = Form(0),
+    is_b_correct: int = Form(0),
+    is_c_correct: int = Form(0),
+    is_d_correct: int = Form(0),
+    sort_order: int = Form(...),
+):
+    if request.session.get("role") != "admin":
+        return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
+
+    ok = save_test_question(
+        question_id,
+        question,
+        option_a,
+        option_b,
+        option_c,
+        option_d,
+        allow_multiple,
+        is_a_correct,
+        is_b_correct,
+        is_c_correct,
+        is_d_correct,
+        sort_order,
+    )
+
+    if not ok:
+        return JSONResponse({"ok": False, "message": "Не вдалося оновити питання. Перевір правильні відповіді."})
+
+    return JSONResponse({"ok": True, "message": "Питання оновлено."})
+
+
+@router.post("/admin/tests/question/{question_id}/delete")
+async def delete_test_question_route(request: Request, question_id: int):
+    if request.session.get("role") != "admin":
+        return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
+
+    remove_test_question(question_id)
+    return JSONResponse({"ok": True, "message": "Питання видалено."})
 
 
 @router.get("/make-admin")

@@ -7,7 +7,6 @@ from src.services.test_service import (
     save_result_if_logged_in,
 )
 from src.utils.page_renderer import render_page
-from src.utils.page_renderer import templates
 
 router = APIRouter()
 
@@ -41,16 +40,12 @@ async def submit_test(request: Request, course_name: str):
     user_id = request.session.get("user_id")
     save_result_if_logged_in(user_id, course_name, score, total)
 
-    return templates.TemplateResponse(
-    request,
-    "result.html",
-    {
-        "username": request.session.get("username"),
-        "role": request.session.get("role"),
-        "course_name": course_name,
-        "course_title": course["title"],
-        "score": score,
-        "total": total,
-        "details": detailed_results,
-    },
+    return render_page(
+        request,
+        "result.html",
+        course_name=course_name,
+        course_title=course["title"],
+        score=score,
+        total=total,
+        details=detailed_results,
     )

@@ -55,6 +55,23 @@ def get_all_courses_for_admin():
     return [dict(course) for course in courses]
 
 
+def get_all_courses():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT id, slug, title, description, page_title, page_subtitle
+        FROM courses
+        ORDER BY title ASC
+        """
+    )
+    courses = cursor.fetchall()
+
+    conn.close()
+    return [dict(course) for course in courses]
+
+
 def update_course_main_info(course_id: int, page_title: str, page_subtitle: str):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -115,6 +132,22 @@ def delete_course_section(section_id: int):
         WHERE id = ?
         """,
         (section_id,),
+    )
+
+    conn.commit()
+    conn.close()
+
+
+def delete_course_by_id(course_id: int):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        DELETE FROM courses
+        WHERE id = ?
+        """,
+        (course_id,),
     )
 
     conn.commit()

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактор тесту</title>
+    <link rel="stylesheet" href="/static/style.css?v=41">
+</head>
+<body>
+    <header class="navbar">
+        <div class="container header-content">
+            <h1 class="logo">Редактор тесту</h1>
+            <nav>
+                <a href="/" class="nav-link">Головна</a>
+                <a href="/courses" class="nav-link">Курси</a>
+                <a href="/admin" class="nav-link active">Адмінка</a>
+                <a href="/logout" class="auth-btn">Вийти</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container admin-page">
+        <section class="admin-top-card">
+            <h2 class="admin-title">{{ course_title }}</h2>
+            <p class="admin-subtitle">Редагування тестових питань курсу</p>
+        </section>
+
+        <section class="admin-section">
+            <div class="admin-section-header">
+                <h3>Питання тесту</h3>
+            </div>
+
+            {% for q in questions %}
+            <form class="test-question-form admin-form-grid" data-question-id="{{ q['db_id'] }}">
+                <div class="admin-form-group">
+                    <label>Порядок</label>
+                    <input type="number" name="sort_order" value="{{ q['sort_order'] }}" required>
+                </div>
+
+                <div class="admin-form-group">
+                    <label style="display:flex; align-items:center; gap:8px;">
+                        <input type="checkbox" name="allow_multiple" value="1" {% if q['allow_multiple'] %}checked{% endif %}>
+                        Кілька правильних відповідей
+                    </label>
+                </div>
+
+                <div class="admin-form-group admin-form-group-full">
+                    <label>Питання</label>
+                    <textarea name="question" rows="3" required>{{ q["question"] }}</textarea>
+                </div>
+
+                <div class="admin-form-group">
+                    <label>Варіант A</label>
+                    <input type="text" name="option_a" value="{{ q['options'][0] }}" required>
+                    <label style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+                        <input type="checkbox" name="is_a_correct" value="1" {% if q['is_a_correct'] %}checked{% endif %}>
+                        A правильна
+                    </label>
+                </div>
+
+                <div class="admin-form-group">
+                    <label>Варіант B</label>
+                    <input type="text" name="option_b" value="{{ q['options'][1] }}" required>
+                    <label style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+                        <input type="checkbox" name="is_b_correct" value="1" {% if q['is_b_correct'] %}checked{% endif %}>
+                        B правильна
+                    </label>
+                </div>
+
+                <div class="admin-form-group">
+                    <label>Варіант C</label>
+                    <input type="text" name="option_c" value="{{ q['options'][2] }}" required>
+                    <label style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+                        <input type="checkbox" name="is_c_correct" value="1" {% if q['is_c_correct'] %}checked{% endif %}>
+                        C правильна
+                    </label>
+                </div>
+
+                <div class="admin-form-group">
+                    <label>Варіант D</label>
+                    <input type="text" name="option_d" value="{{ q['options'][3] }}" required>
+                    <label style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+                        <input type="checkbox" name="is_d_correct" value="1" {% if q['is_d_correct'] %}checked{% endif %}>
+                        D правильна
+                    </label>
+                </div>
+
+                <div class="admin-form-group admin-form-group-full">
+                    <p class="form-message" style="display:none;"></p>
+                    <button type="submit" class="admin-save-btn">Зберегти питання</button>
+                    <button type="button" class="auth-btn delete-question-btn" data-question-id="{{ q['db_id'] }}" style="margin-left:10px;">
+                        Видалити питання
+                    </button>
+                </div>
+            </form>
+            <hr style="margin: 30px 0; border: 1px solid #2a2a2a;">
+            {% endfor %}
+        </section>
+
+        <section class="admin-section">
+            <div class="admin-section-header">
+                <h3>Додати нове питання</h3>
+            </div>
+
+            <form id="add-question-form" class="admin-form-grid">
+                <div class="admin-form-group">
+                    <label>Порядок</label>
+                    <input type="number" name="sort_order" value="100" required>
+                </div>
+
+                <div class="admin-form-group">
+                    <label style="display:flex; align-items:center; gap:8px;">
+                        <input type="checkbox" name="allow_multiple" value="1">
+                        Кілька правильних відповідей
+                    </label>
+                </div>
+
+                <div class="admin-form-group admin-form-group-full">
+                    <label>Питання</label>
+                    <textarea name="question" rows="3" required></textarea>
+                </div>
+
+                <div class="admin-form-group">
+                    <label>Варіант A</label>
+                    <input type="text" name="option_a" required>
+                    <label style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+                        <input type="checkbox" name="is_a_correct" value="1">
+                        A правильна
+                    </label>
+                </div>
+
+                <div class="admin-form-group">
+                    <label>Варіант B</label>
+                    <input type="text" name="option_b" required>
+                    <label style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+                        <input type="checkbox" name="is_b_correct" value="1">
+                        B правильна
+                    </label>
+                </div>
+
+                <div class="admin-form-group">
+                    <label>Варіант C</label>
+                    <input type="text" name="option_c" required>
+                    <label style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+                        <input type="checkbox" name="is_c_correct" value="1">
+                        C правильна
+                    </label>
+                </div>
+
+                <div class="admin-form-group">
+                    <label>Варіант D</label>
+                    <input type="text" name="option_d" required>
+                    <label style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+                        <input type="checkbox" name="is_d_correct" value="1">
+                        D правильна
+                    </label>
+                </div>
+
+                <div class="admin-form-group admin-form-group-full">
+                    <p id="add-question-message" class="form-message error-message" style="display:none;"></p>
+                    <button type="submit" class="admin-save-btn">Додати питання</button>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <script>
+        const courseSlug = "{{ course_slug }}";
+
+        function normalizeFormData(form) {
+            const formData = new FormData(form);
+
+            if (!formData.has("allow_multiple")) formData.set("allow_multiple", "0");
+            if (!formData.has("is_a_correct")) formData.set("is_a_correct", "0");
+            if (!formData.has("is_b_correct")) formData.set("is_b_correct", "0");
+            if (!formData.has("is_c_correct")) formData.set("is_c_correct", "0");
+            if (!formData.has("is_d_correct")) formData.set("is_d_correct", "0");
+
+            return formData;
+        }
+
+        document.querySelectorAll(".test-question-form").forEach(form => {
+            form.addEventListener("submit", async function(e) {
+                e.preventDefault();
+
+                const questionId = form.dataset.questionId;
+                const message = form.querySelector(".form-message");
+                const formData = normalizeFormData(form);
+
+                const response = await fetch(`/admin/tests/question/${questionId}/update`, {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                message.style.display = "block";
+                message.className = data.ok ? "form-message success-message" : "form-message error-message";
+                message.textContent = data.message;
+            });
+        });
+
+        document.querySelectorAll(".delete-question-btn").forEach(button => {
+            button.addEventListener("click", async function() {
+                const questionId = button.dataset.questionId;
+
+                const response = await fetch(`/admin/tests/question/${questionId}/delete`, {
+                    method: "POST"
+                });
+
+                const data = await response.json();
+
+                if (data.ok) {
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            });
+        });
+
+        const addQuestionForm = document.getElementById("add-question-form");
+        const addQuestionMessage = document.getElementById("add-question-message");
+
+        addQuestionForm.addEventListener("submit", async function(e) {
+            e.preventDefault();
+
+            const formData = normalizeFormData(addQuestionForm);
+
+            const response = await fetch(`/admin/tests/${courseSlug}/question/add`, {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+
+            addQuestionMessage.style.display = "block";
+            addQuestionMessage.className = data.ok ? "form-message success-message" : "form-message error-message";
+            addQuestionMessage.textContent = data.message;
+
+            if (data.ok) {
+                setTimeout(() => location.reload(), 500);
+            }
+        });
+    </script>
+</body>
+</html>

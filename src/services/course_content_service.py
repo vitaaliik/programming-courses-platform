@@ -1,11 +1,14 @@
 from src.repositories.course_content_repository import (
     create_course_section,
+    delete_course_by_id,
     delete_course_section,
+    get_all_courses,
     get_all_courses_for_admin,
     get_course_with_sections_by_slug,
     update_course_main_info,
     update_course_section,
 )
+from src.repositories.course_repository import create_course, get_course_by_slug
 
 
 def get_course_page_data(slug: str):
@@ -14,6 +17,10 @@ def get_course_page_data(slug: str):
 
 def get_courses_for_admin():
     return get_all_courses_for_admin()
+
+
+def get_courses_for_page():
+    return get_all_courses()
 
 
 def get_course_editor_data(slug: str):
@@ -60,3 +67,28 @@ def save_course_section(section_id: int, title: str, content_html: str, sort_ord
 def remove_course_section(section_id: int):
     delete_course_section(section_id)
     return True
+
+
+def create_new_course(slug: str, title: str, description: str):
+    slug = slug.strip().lower()
+    title = title.strip()
+    description = description.strip()
+
+    if not slug or not title or not description:
+        return {"ok": False, "message": "Усі поля обов'язкові."}
+
+    existing = get_course_by_slug(slug)
+    if existing:
+        return {"ok": False, "message": "Курс із таким slug уже існує."}
+
+    create_course(slug, title, description)
+    return {"ok": True, "message": "Новий курс успішно створено."}
+
+
+def remove_course(slug: str):
+    course = get_course_by_slug(slug)
+    if not course:
+        return {"ok": False, "message": "Курс не знайдено."}
+
+    delete_course_by_id(course["id"])
+    return {"ok": True, "message": "Курс видалено."}
