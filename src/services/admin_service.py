@@ -1,5 +1,12 @@
 from src.core.database import get_db_connection
-from src.repositories.site_repository import get_site_content
+from src.repositories.site_repository import (
+    create_home_block,
+    delete_home_block,
+    get_home_blocks,
+    get_site_content,
+    update_home_block,
+    update_site_hero,
+)
 
 
 def get_admin_dashboard_data():
@@ -53,8 +60,6 @@ def get_admin_dashboard_data():
     )
     recent_results = cursor.fetchall()
 
-    site_content = get_site_content()
-
     conn.close()
 
     return {
@@ -63,87 +68,42 @@ def get_admin_dashboard_data():
         "total_results": total_results,
         "users": users,
         "recent_results": recent_results,
-        "site_content": site_content,
     }
 
 
-def update_home_page_content(data: dict):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute(
-        """
-        UPDATE site_content
-        SET
-            hero_title = ?,
-            hero_subtitle = ?,
-
-            about_title = ?,
-            about_text_1 = ?,
-            about_text_2 = ?,
-
-            audience_title = ?,
-            audience_item_1 = ?,
-            audience_item_2 = ?,
-            audience_item_3 = ?,
-            audience_item_4 = ?,
-
-            features_title = ?,
-            features_item_1 = ?,
-            features_item_2 = ?,
-            features_item_3 = ?,
-            features_item_4 = ?,
-            features_item_5 = ?,
-
-            college_title = ?,
-            college_text_1 = ?,
-            college_text_2 = ?,
-
-            creator_title = ?,
-            creator_text = ?,
-
-            skills_title = ?,
-            skills_text_1 = ?,
-            skills_text_2 = ?,
-
-            importance_title = ?,
-            importance_text_1 = ?,
-            importance_text_2 = ?
-        WHERE id = 1
-        """,
-        (
-            data["hero_title"],
-            data["hero_subtitle"],
-            data["about_title"],
-            data["about_text_1"],
-            data["about_text_2"],
-            data["audience_title"],
-            data["audience_item_1"],
-            data["audience_item_2"],
-            data["audience_item_3"],
-            data["audience_item_4"],
-            data["features_title"],
-            data["features_item_1"],
-            data["features_item_2"],
-            data["features_item_3"],
-            data["features_item_4"],
-            data["features_item_5"],
-            data["college_title"],
-            data["college_text_1"],
-            data["college_text_2"],
-            data["creator_title"],
-            data["creator_text"],
-            data["skills_title"],
-            data["skills_text_1"],
-            data["skills_text_2"],
-            data["importance_title"],
-            data["importance_text_1"],
-            data["importance_text_2"],
-        ),
+def update_home_hero(data: dict):
+    update_site_hero(
+        hero_title=data["hero_title"].strip(),
+        hero_subtitle=data["hero_subtitle"].strip(),
     )
 
-    conn.commit()
-    conn.close()
+
+def get_home_editor_data():
+    return {
+        "site_content": get_site_content(),
+        "home_blocks": get_home_blocks(),
+    }
+
+
+def add_new_home_block(title: str, content_html: str, sort_order: int):
+    if not title.strip():
+        return False
+
+    create_home_block(title.strip(), content_html.strip(), sort_order)
+    return True
+
+
+def save_home_block(block_id: int, title: str, content_html: str, sort_order: int):
+    if not title.strip():
+        return False
+
+    update_home_block(block_id, title.strip(), content_html.strip(), sort_order)
+    return True
+
+
+def remove_home_block(block_id: int):
+    delete_home_block(block_id)
+    return True
 
 
 def make_user_admin_by_email(email: str):

@@ -7,6 +7,27 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+    <header class="navbar">
+        <div class="container header-content">
+            <h1 class="logo">Результат</h1>
+            <nav>
+                <a href="/" class="nav-link">Головна</a>
+                <a href="/courses" class="nav-link">Курси</a>
+
+                {% if username %}
+                    {% if role == "admin" %}
+                        <a href="/admin" class="nav-link">Адмінка</a>
+                    {% else %}
+                        <a href="/profile" class="nav-link">Профіль</a>
+                    {% endif %}
+                    <a href="/logout" class="auth-btn">Вийти</a>
+                {% else %}
+                    <a href="/auth" class="auth-btn">Вхід / Реєстрація</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
     <main class="test-page">
         <div class="test-container">
             <h1>Результат: {{ course_title }}</h1>

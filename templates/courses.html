@@ -3,18 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Наші Курси Програмування</title>
-    <link rel="stylesheet" href="/static/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <title>Курси</title>
+    <link rel="stylesheet" href="/static/style.css?v=50">
 </head>
 <body>
-
     <header class="navbar">
         <div class="container header-content">
             <h1 class="logo">Курси програмування</h1>
             <nav>
-                <a href="/" class="nav-link active">Головна</a>
-                <a href="/courses" class="nav-link">Курси</a>
+                <a href="/" class="nav-link">Головна</a>
+                <a href="/courses" class="nav-link active">Курси</a>
+
                 {% if username %}
                     {% if role == "admin" %}
                         <a href="/admin" class="nav-link">Адмінка</a>
@@ -29,75 +28,28 @@
         </div>
     </header>
 
-    <main class="container">
-        
-        <section class="courses-page-header">
-            <h2>Наші курси</h2>
-            <p>Виберіть курс для початківців до досвідчених програмістів</p>
+    <main class="container" style="padding-top: 40px; padding-bottom: 40px;">
+        <section class="admin-top-card">
+            <h2 class="admin-title">Доступні курси</h2>
+            <p class="admin-subtitle">Оберіть курс і переходьте до вивчення</p>
         </section>
 
-        <div class="course-grid">
-            
-            <a href="/course-page/cpp" class="course-card">
-                <div class="course-icon" style="font-size: 3em; color: #f39c12;""><i class="fas fa-bolt"></i></div>
-                <h4>C++</h4>
-                <p>Почати навчання →</p>
-            </a>
-            
-            <a href="/course-page/csharp" class="course-card">
-                <div class="course-icon" style="font-size: 3em; color: #9b59b6;"><i class="fas fa-gem"></i></div> 
-                <h4>C#</h4>
-                <p>Почати навчання →</p>
-            </a>
+        <section class="admin-results-grid">
+            {% for course in courses %}
+            <div class="admin-result-card">
+                <h3>{{ course["title"] }}</h3>
+                <p>{{ course["description"] }}</p>
 
-            <a href="/course-page/delphi" class="course-card active-card">
-                <div class="course-icon" style="font-size: 3em; color: #e74c3c;"><i class="fas fa-bullseye"></i></div> 
-                <h4>Delphi</h4>
-                <p>Почати навчання →</p>
-            </a>
+                <a href="/course/{{ course['slug'] }}" class="auth-btn" style="display:inline-block; margin-top:10px;">
+                    Відкрити курс
+                </a>
 
-            <a href="/course-page/python" class="course-card">
-                <div class="course-icon" style="font-size: 3em; color: #2ecc71;"><i class="fab fa-python"></i></div>
-                <h4>Python</h4>
-                <p>Почати навчання →</p>
-            </a>
-
-            <a href="/course-page/java" class="course-card">
-                <div class="course-icon" style="font-size: 3em; color: #e67e22;"><i class="fas fa-mug-hot"></i></div>
-                <h4>Java</h4>
-                <p>Почати навчання →</p>
-            </a>
-
-            <a href="/course-page/javascript" class="course-card">
-                <div class="course-icon" style="font-size: 3em; color: #f7df1e;"><i class="fab fa-js"></i></div>
-                <h4>JavaScript</h4>
-                <p>Почати навчання →</p>
-            </a>
-
-            <a href="/course-page/htmlcss" class="course-card">
-                <div class="course-icon" style="font-size: 3em; color: #e44d26;"><i class="fas fa-code"></i></div>
-                <h4>HTML/CSS</h4>
-                <p>Почати навчання →</p>
-            </a>
-
-            <a href="/course-page/php" class="course-card">
-                <div class="course-icon" style="font-size: 3em; color: #777bb3;"><i class="fas fa-server"></i></div>
-                <h4>PHP</h4>
-                <p>Почати навчання →</p>
-            </a>
-
-            <a href="course-page/sql" class="course-card">
-                <div class="course-icon" style="font-size: 3em; color: #2e86c1;"><i class="fas fa-database"></i></div>
-                <h4>SQL</h4>
-                <p>Почати навчання →</p>
-            </a>
-            
-        </div>
+                <a href="/test/{{ course['slug'] }}" class="auth-btn" style="display:inline-block; margin-top:10px; margin-left:10px;">
+                    Пройти тест
+                </a>
+            </div>
+            {% endfor %}
+        </section>
     </main>
-
-    <footer>
-        <p style="text-align: center; padding: 20px; color: #777;">&copy; 2025 Проєкт студента ДМТК.</p>
-    </footer>
-
 </body>
 </html>

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Адмін-панель</title>
-    <link rel="stylesheet" href="/static/style.css?v=20">
+    <link rel="stylesheet" href="/static/style.css?v=82">
 </head>
 <body>
     <header class="navbar">
@@ -22,7 +22,7 @@
     <main class="container admin-page">
         <section class="admin-top-card">
             <h2 class="admin-title">Панель адміністратора</h2>
-            <p class="admin-subtitle">Редагування головної сторінки, перегляд користувачів і результатів</p>
+            <p class="admin-subtitle">Курси, тести, користувачі та головна сторінка</p>
         </section>
 
         <section class="admin-stats-grid">
@@ -44,151 +44,74 @@
 
         <section class="admin-section">
             <div class="admin-section-header">
-                <h3>Редагування головної сторінки</h3>
-                <p>Тут можна змінювати весь текст головної сторінки</p>
+                <h3>Головна сторінка</h3>
+                <p>Перейти до нового редактора блоків головної сторінки</p>
             </div>
 
-            <form id="home-content-form" class="admin-form-grid">
+            <a href="/admin/home" class="admin-save-btn" style="display:inline-block; text-decoration:none;">
+                Редагувати головну сторінку
+            </a>
+        </section>
+
+        <section class="admin-section">
+            <div class="admin-section-header">
+                <h3>Додати новий курс</h3>
+                <p>Створи новий курс, який потім можна буде наповнити секціями і тестами</p>
+            </div>
+
+            <form id="create-course-form" class="admin-form-grid">
                 <div class="admin-form-group">
-                    <label for="hero_title">Головний заголовок</label>
-                    <input type="text" id="hero_title" name="hero_title" value="{{ site_content['hero_title'] }}" required>
+                    <label for="course_slug">Slug</label>
+                    <input type="text" id="course_slug" name="slug" placeholder="наприклад: go" required>
                 </div>
 
                 <div class="admin-form-group">
-                    <label for="hero_subtitle">Підзаголовок</label>
-                    <input type="text" id="hero_subtitle" name="hero_subtitle" value="{{ site_content['hero_subtitle'] }}" required>
-                </div>
-
-                <div class="admin-form-group">
-                    <label for="about_title">Заголовок блоку “Про сайт”</label>
-                    <input type="text" id="about_title" name="about_title" value="{{ site_content['about_title'] }}" required>
+                    <label for="course_title">Назва курсу</label>
+                    <input type="text" id="course_title" name="title" placeholder="наприклад: Go" required>
                 </div>
 
                 <div class="admin-form-group admin-form-group-full">
-                    <label for="about_text_1">Про сайт — абзац 1</label>
-                    <textarea id="about_text_1" name="about_text_1" rows="4" required>{{ site_content["about_text_1"] }}</textarea>
+                    <label for="course_description">Короткий опис</label>
+                    <textarea id="course_description" name="description" rows="3" placeholder="наприклад: Курс з основ Go" required></textarea>
                 </div>
 
                 <div class="admin-form-group admin-form-group-full">
-                    <label for="about_text_2">Про сайт — абзац 2</label>
-                    <textarea id="about_text_2" name="about_text_2" rows="4" required>{{ site_content["about_text_2"] }}</textarea>
-                </div>
-
-                <div class="admin-form-group">
-                    <label for="audience_title">Заголовок блоку “Для кого сайт”</label>
-                    <input type="text" id="audience_title" name="audience_title" value="{{ site_content['audience_title'] }}" required>
-                </div>
-
-                <div class="admin-form-group">
-                    <label for="audience_item_1">Пункт 1</label>
-                    <input type="text" id="audience_item_1" name="audience_item_1" value="{{ site_content['audience_item_1'] }}" required>
-                </div>
-
-                <div class="admin-form-group">
-                    <label for="audience_item_2">Пункт 2</label>
-                    <input type="text" id="audience_item_2" name="audience_item_2" value="{{ site_content['audience_item_2'] }}" required>
-                </div>
-
-                <div class="admin-form-group">
-                    <label for="audience_item_3">Пункт 3</label>
-                    <input type="text" id="audience_item_3" name="audience_item_3" value="{{ site_content['audience_item_3'] }}" required>
-                </div>
-
-                <div class="admin-form-group">
-                    <label for="audience_item_4">Пункт 4</label>
-                    <input type="text" id="audience_item_4" name="audience_item_4" value="{{ site_content['audience_item_4'] }}" required>
-                </div>
-
-                <div class="admin-form-group">
-                    <label for="features_title">Заголовок блоку “Що є на сайті”</label>
-                    <input type="text" id="features_title" name="features_title" value="{{ site_content['features_title'] }}" required>
-                </div>
-
-                <div class="admin-form-group">
-                    <label for="features_item_1">Пункт 1</label>
-                    <input type="text" id="features_item_1" name="features_item_1" value="{{ site_content['features_item_1'] }}" required>
-                </div>
-
-                <div class="admin-form-group">
-                    <label for="features_item_2">Пункт 2</label>
-                    <input type="text" id="features_item_2" name="features_item_2" value="{{ site_content['features_item_2'] }}" required>
-                </div>
-
-                <div class="admin-form-group">
-                    <label for="features_item_3">Пункт 3</label>
-                    <input type="text" id="features_item_3" name="features_item_3" value="{{ site_content['features_item_3'] }}" required>
-                </div>
-
-                <div class="admin-form-group">
-                    <label for="features_item_4">Пункт 4</label>
-                    <input type="text" id="features_item_4" name="features_item_4" value="{{ site_content['features_item_4'] }}" required>
-                </div>
-
-                <div class="admin-form-group">
-                    <label for="features_item_5">Пункт 5</label>
-                    <input type="text" id="features_item_5" name="features_item_5" value="{{ site_content['features_item_5'] }}" required>
-                </div>
-
-                <div class="admin-form-group">
-                    <label for="college_title">Заголовок блоку “Про коледж”</label>
-                    <input type="text" id="college_title" name="college_title" value="{{ site_content['college_title'] }}" required>
-                </div>
-
-                <div class="admin-form-group admin-form-group-full">
-                    <label for="college_text_1">Про коледж — абзац 1</label>
-                    <textarea id="college_text_1" name="college_text_1" rows="4" required>{{ site_content["college_text_1"] }}</textarea>
-                </div>
-
-                <div class="admin-form-group admin-form-group-full">
-                    <label for="college_text_2">Про коледж — абзац 2</label>
-                    <textarea id="college_text_2" name="college_text_2" rows="4" required>{{ site_content["college_text_2"] }}</textarea>
-                </div>
-
-                <div class="admin-form-group">
-                    <label for="creator_title">Заголовок блоку “Хто створив сайт”</label>
-                    <input type="text" id="creator_title" name="creator_title" value="{{ site_content['creator_title'] }}" required>
-                </div>
-
-                <div class="admin-form-group admin-form-group-full">
-                    <label for="creator_text">Хто створив сайт — текст</label>
-                    <textarea id="creator_text" name="creator_text" rows="4" required>{{ site_content["creator_text"] }}</textarea>
-                </div>
-
-                <div class="admin-form-group">
-                    <label for="skills_title">Заголовок блоку “Звідки навички”</label>
-                    <input type="text" id="skills_title" name="skills_title" value="{{ site_content['skills_title'] }}" required>
-                </div>
-
-                <div class="admin-form-group admin-form-group-full">
-                    <label for="skills_text_1">Звідки навички — абзац 1</label>
-                    <textarea id="skills_text_1" name="skills_text_1" rows="4" required>{{ site_content["skills_text_1"] }}</textarea>
-                </div>
-
-                <div class="admin-form-group admin-form-group-full">
-                    <label for="skills_text_2">Звідки навички — абзац 2</label>
-                    <textarea id="skills_text_2" name="skills_text_2" rows="4" required>{{ site_content["skills_text_2"] }}</textarea>
-                </div>
-
-                <div class="admin-form-group">
-                    <label for="importance_title">Заголовок блоку “Чому проєкт важливий”</label>
-                    <input type="text" id="importance_title" name="importance_title" value="{{ site_content['importance_title'] }}" required>
-                </div>
-
-                <div class="admin-form-group admin-form-group-full">
-                    <label for="importance_text_1">Чому важливий — абзац 1</label>
-                    <textarea id="importance_text_1" name="importance_text_1" rows="4" required>{{ site_content["importance_text_1"] }}</textarea>
-                </div>
-
-                <div class="admin-form-group admin-form-group-full">
-                    <label for="importance_text_2">Чому важливий — абзац 2</label>
-                    <textarea id="importance_text_2" name="importance_text_2" rows="4" required>{{ site_content["importance_text_2"] }}</textarea>
-                </div>
-
-                <div class="admin-form-group admin-form-group-full">
-                    <p id="admin-home-message" class="form-message error-message" style="display:none;"></p>
-                    <button type="submit" class="admin-save-btn">Зберегти зміни</button>
+                    <p id="create-course-message" class="form-message error-message" style="display:none;"></p>
+                    <button type="submit" class="admin-save-btn">Додати курс</button>
                 </div>
             </form>
+        </section>
+
+        <section class="admin-section">
+            <div class="admin-section-header">
+                <h3>Редагування курсів</h3>
+                <p>Вибери курс і перейди до його редагування</p>
+            </div>
+
+            <div class="admin-results-grid">
+                {% for course in courses %}
+                <div class="admin-result-card">
+                    <h4>{{ course["title"] }}</h4>
+                    <p><strong>Slug:</strong> {{ course["slug"] }}</p>
+                    <p><strong>Опис:</strong> {{ course["description"] }}</p>
+
+                    <a href="/admin/course/{{ course['slug'] }}" class="auth-btn" style="display:inline-block; margin-top:10px;">
+                        Редагувати курс
+                    </a>
+
+                    <a href="/admin/tests/{{ course['slug'] }}" class="auth-btn" style="display:inline-block; margin-top:10px; margin-left:10px;">
+                        Редагувати тест
+                    </a>
+
+                    <button
+                        type="button"
+                        class="btn-danger"
+                        data-course-slug="{{ course['slug'] }}"
+                    >   Видалити курс
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
         </section>
 
         <section class="admin-section">
@@ -254,30 +177,51 @@
     </main>
 
     <script>
-        const homeForm = document.getElementById("home-content-form");
-        const homeMessage = document.getElementById("admin-home-message");
+        const createCourseForm = document.getElementById("create-course-form");
+        const createCourseMessage = document.getElementById("create-course-message");
 
-        homeForm.addEventListener("submit", async function(e) {
-            e.preventDefault();
+        if (createCourseForm) {
+            createCourseForm.addEventListener("submit", async function(e) {
+                e.preventDefault();
 
-            const formData = new FormData(homeForm);
+                const formData = new FormData(createCourseForm);
 
-            const response = await fetch("/admin/update-home", {
-                method: "POST",
-                body: formData
+                const response = await fetch("/admin/course/create", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                createCourseMessage.style.display = "block";
+                createCourseMessage.className = data.ok ? "form-message success-message" : "form-message error-message";
+                createCourseMessage.textContent = data.message;
+
+                if (data.ok) {
+                    setTimeout(() => location.reload(), 700);
+                }
             });
+        }
 
-            const data = await response.json();
+        document.querySelectorAll(".delete-course-btn").forEach(button => {
+            button.addEventListener("click", async function() {
+                const slug = button.dataset.courseSlug;
 
-            homeMessage.style.display = "block";
+                const confirmed = confirm(`Точно видалити курс "${slug}"?`);
+                if (!confirmed) return;
 
-            if (data.ok) {
-                homeMessage.className = "form-message success-message";
-                homeMessage.textContent = data.message;
-            } else {
-                homeMessage.className = "form-message error-message";
-                homeMessage.textContent = data.message;
-            }
+                const response = await fetch(`/admin/course/${slug}/delete`, {
+                    method: "POST"
+                });
+
+                const data = await response.json();
+
+                if (data.ok) {
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            });
         });
     </script>
 </body>

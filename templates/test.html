@@ -7,6 +7,27 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+    <header class="navbar">
+        <div class="container header-content">
+            <h1 class="logo">Тест</h1>
+            <nav>
+                <a href="/" class="nav-link">Головна</a>
+                <a href="/courses" class="nav-link">Курси</a>
+
+                {% if username %}
+                    {% if role == "admin" %}
+                        <a href="/admin" class="nav-link">Адмінка</a>
+                    {% else %}
+                        <a href="/profile" class="nav-link">Профіль</a>
+                    {% endif %}
+                    <a href="/logout" class="auth-btn">Вийти</a>
+                {% else %}
+                    <a href="/auth" class="auth-btn">Вхід / Реєстрація</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
     <main class="test-page">
         <div class="test-container">
             <h1>{{ course_title }}</h1>
@@ -17,10 +38,18 @@
                 <div class="question-card">
                     <h3>{{ loop.index }}. {{ q.question }}</h3>
 
+                    {% if q.allow_multiple %}
+                    <p class="subtitle">Можна вибрати кілька правильних відповідей</p>
+                    {% endif %}
+
                     <div class="options">
                         {% for option in q.options %}
                         <label class="option-item">
-                            <input type="radio" name="{{ q.id }}" value="{{ option }}">
+                            {% if q.allow_multiple %}
+                                <input type="checkbox" name="{{ q.id }}" value="{{ option }}">
+                            {% else %}
+                                <input type="radio" name="{{ q.id }}" value="{{ option }}">
+                            {% endif %}
                             <span>{{ option }}</span>
                         </label>
                         {% endfor %}

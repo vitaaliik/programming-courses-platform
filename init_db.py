@@ -44,6 +44,48 @@ def init_db() -> None:
         )
     """)
 
+    try:
+        cursor.execute("ALTER TABLE courses ADD COLUMN page_title TEXT")
+    except sqlite3.OperationalError:
+        pass
+
+    try:
+        cursor.execute("ALTER TABLE courses ADD COLUMN page_subtitle TEXT")
+    except sqlite3.OperationalError:
+        pass
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS course_sections (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            course_id INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            content_html TEXT NOT NULL,
+            sort_order INTEGER NOT NULL DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS test_questions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            course_id INTEGER NOT NULL,
+            question TEXT NOT NULL,
+            option_a TEXT NOT NULL,
+            option_b TEXT NOT NULL,
+            option_c TEXT NOT NULL,
+            option_d TEXT NOT NULL,
+            allow_multiple INTEGER NOT NULL DEFAULT 0,
+            is_a_correct INTEGER NOT NULL DEFAULT 0,
+            is_b_correct INTEGER NOT NULL DEFAULT 0,
+            is_c_correct INTEGER NOT NULL DEFAULT 0,
+            is_d_correct INTEGER NOT NULL DEFAULT 0,
+            sort_order INTEGER NOT NULL DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+        )
+    """)
+
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS test_results (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -104,6 +146,16 @@ def init_db() -> None:
             importance_title TEXT NOT NULL,
             importance_text_1 TEXT NOT NULL,
             importance_text_2 TEXT NOT NULL
+        )
+    """)
+    
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS home_blocks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            content_html TEXT NOT NULL,
+            sort_order INTEGER NOT NULL DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     """)
 
@@ -188,6 +240,76 @@ def init_db() -> None:
             'Він дозволяє систематизувати знання, отримати практику та краще зрозуміти, як працюють реальні веб-застосунки.'
         )
     """)
+
+    cursor.execute("SELECT COUNT(*) FROM home_blocks")
+    blocks_count = cursor.fetchone()[0]
+
+    if blocks_count == 0:
+        cursor.execute("SELECT * FROM site_content WHERE id = 1")
+        row = cursor.fetchone()
+
+        if row:
+            blocks_data = [
+                {
+                    "title": row[3],
+                    "content_html": f"<p>{row[4]}</p><p>{row[5]}</p>",
+                    "sort_order": 1,
+                },
+                {
+                    "title": row[6],
+                    "content_html": (
+                        f"<ul>"
+                        f"<li>{row[7]}</li>"
+                        f"<li>{row[8]}</li>"
+                        f"<li>{row[9]}</li>"
+                        f"<li>{row[10]}</li>"
+                        f"</ul>"
+                    ),
+                    "sort_order": 2,
+                },
+                {
+                    "title": row[11],
+                    "content_html": (
+                        f"<ul>"
+                        f"<li>{row[12]}</li>"
+                        f"<li>{row[13]}</li>"
+                        f"<li>{row[14]}</li>"
+                        f"<li>{row[15]}</li>"
+                        f"<li>{row[16]}</li>"
+                        f"</ul>"
+                    ),
+                    "sort_order": 3,
+                },
+                {
+                    "title": row[17],
+                    "content_html": f"<p>{row[18]}</p><p>{row[19]}</p>",
+                    "sort_order": 4,
+                },
+                {
+                    "title": row[20],
+                    "content_html": f"<p>{row[21]}</p>",
+                    "sort_order": 5,
+                },
+                {
+                    "title": row[22],
+                    "content_html": f"<p>{row[23]}</p><p>{row[24]}</p>",
+                    "sort_order": 6,
+                },
+                {
+                    "title": row[25],
+                    "content_html": f"<p>{row[26]}</p><p>{row[27]}</p>",
+                    "sort_order": 7,
+                },
+            ]
+
+            for block in blocks_data:
+                cursor.execute(
+                    """
+                    INSERT INTO home_blocks (title, content_html, sort_order)
+                    VALUES (?, ?, ?)
+                    """,
+                    (block["title"], block["content_html"], block["sort_order"]),
+                )
 
     conn.commit()
     conn.close()

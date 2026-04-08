@@ -30,3 +30,5 @@ Thumbs.db
 
 # dotenv (ВАЖЛИВО — тут пошта і пароль)
 .env
+
+templates_backup
