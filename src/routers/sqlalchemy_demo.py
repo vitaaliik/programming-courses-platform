@@ -1,21 +1,14 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
-from src.core.database_sqlalchemy import get_db_session
-from src.services.course_service_sqlalchemy import get_all_courses_via_sqlalchemy
+from src.dependencies.course import get_course_service
+from src.schemas.course import CourseRead
+from src.services.course_service_sqlalchemy import CourseService
 
-router = APIRouter()
+router = APIRouter(prefix="/debug/sqlalchemy", tags=["sqlalchemy-demo"])
 
 
-@router.get("/debug/sqlalchemy/courses")
-async def debug_sqlalchemy_courses(db: Session = Depends(get_db_session)):
-    courses = get_all_courses_via_sqlalchemy(db)
-
-    return [
-        {
-            "id": course.id,
-            "slug": course.slug,
-            "title": course.title,
-        }
-        for course in courses
-    ]
+@router.get("/courses", response_model=list[CourseRead])
+async def debug_sqlalchemy_courses(
+    course_service: CourseService = Depends(get_course_service),
+):
+    return course_service.get_all_courses()
