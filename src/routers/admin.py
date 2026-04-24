@@ -10,16 +10,12 @@ from src.services.admin_service import (
     save_home_block,
     update_home_hero,
 )
-from src.services.course_content_service import (
-    add_new_course_section,
-    create_new_course,
-    get_course_editor_data,
-    get_courses_for_admin,
-    remove_course,
-    remove_course_section,
-    save_course_main_info,
-    save_course_section,
-)
+from typing import Annotated
+
+from fastapi import Depends
+from src.dependencies.course import get_course_content_service
+from src.services.course_content_service_sqlalchemy import CourseContentService
+
 from src.services.test_service import (
     add_new_test_question,
     get_test_editor_data,
@@ -32,7 +28,13 @@ router = APIRouter()
 
 
 @router.get("/admin", response_class=HTMLResponse)
-async def admin_page(request: Request):
+async def admin_page(
+    request: Request,
+    course_service: Annotated[
+        CourseContentService,
+        Depends(get_course_content_service),
+    ],
+):
     user_id = request.session.get("user_id")
 
     if not user_id:
@@ -42,7 +44,7 @@ async def admin_page(request: Request):
         return RedirectResponse(url="/profile", status_code=303)
 
     data = get_admin_dashboard_data()
-    courses = get_courses_for_admin()
+    courses = course_service.get_courses_for_admin()
 
     return render_page(request, "admin.html", **data, courses=courses)
 
@@ -124,6 +126,10 @@ async def delete_home_block_route(request: Request, block_id: int):
 @router.post("/admin/course/create")
 async def create_course_route(
     request: Request,
+    course_service: Annotated[
+        CourseContentService,
+        Depends(get_course_content_service),
+    ],
     slug: str = Form(...),
     title: str = Form(...),
     description: str = Form(...),
@@ -131,21 +137,35 @@ async def create_course_route(
     if request.session.get("role") != "admin":
         return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
 
-    result = create_new_course(slug, title, description)
+    result = course_service.create_new_course(slug, title, description)
     return JSONResponse(result)
 
 
 @router.post("/admin/course/{slug}/delete")
-async def delete_course_route(request: Request, slug: str):
+async def delete_course_route(
+    request: Request,
+    slug: str,
+    course_service: Annotated[
+        CourseContentService,
+        Depends(get_course_content_service),
+    ],
+):
     if request.session.get("role") != "admin":
         return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
 
-    result = remove_course(slug)
+    result = course_service.remove_course(slug)
     return JSONResponse(result)
 
 
 @router.get("/admin/course/{slug}", response_class=HTMLResponse)
-async def edit_course_page(request: Request, slug: str):
+async def edit_course_page(
+    request: Request,
+    slug: str,
+    course_service: Annotated[
+        CourseContentService,
+        Depends(get_course_content_service),
+    ],
+):
     user_id = request.session.get("user_id")
 
     if not user_id:
@@ -154,7 +174,8 @@ async def edit_course_page(request: Request, slug: str):
     if request.session.get("role") != "admin":
         return RedirectResponse(url="/profile", status_code=303)
 
-    course = get_course_editor_data(slug)
+    course = course_service.get_course_editor_data(slug)
+
     if not course:
         return RedirectResponse(url="/admin", status_code=303)
 
@@ -170,13 +191,18 @@ async def edit_course_page(request: Request, slug: str):
 async def update_course_main(
     request: Request,
     slug: str,
+    course_service: Annotated[
+        CourseContentService,
+        Depends(get_course_content_service),
+    ],
     page_title: str = Form(...),
     page_subtitle: str = Form(...),
 ):
     if request.session.get("role") != "admin":
         return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
 
-    ok = save_course_main_info(slug, page_title, page_subtitle)
+    ok = course_service.save_course_main_info(slug, page_title, page_subtitle)
+
     if not ok:
         return JSONResponse({"ok": False, "message": "Курс не знайдено."})
 
@@ -187,6 +213,10 @@ async def update_course_main(
 async def add_course_section(
     request: Request,
     slug: str,
+    course_service: Annotated[
+        CourseContentService,
+        Depends(get_course_content_service),
+    ],
     title: str = Form(...),
     content_html: str = Form(...),
     sort_order: int = Form(...),
@@ -194,7 +224,8 @@ async def add_course_section(
     if request.session.get("role") != "admin":
         return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
 
-    ok = add_new_course_section(slug, title, content_html, sort_order)
+    ok = course_service.add_new_course_section(slug, title, content_html, sort_order)
+
     if not ok:
         return JSONResponse({"ok": False, "message": "Не вдалося додати секцію."})
 
@@ -205,6 +236,10 @@ async def add_course_section(
 async def update_section(
     request: Request,
     section_id: int,
+    course_service: Annotated[
+        CourseContentService,
+        Depends(get_course_content_service),
+    ],
     title: str = Form(...),
     content_html: str = Form(...),
     sort_order: int = Form(...),
@@ -212,18 +247,23 @@ async def update_section(
     if request.session.get("role") != "admin":
         return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
 
-    save_course_section(section_id, title, content_html, sort_order)
+    course_service.save_course_section(section_id, title, content_html, sort_order)
     return JSONResponse({"ok": True, "message": "Секцію оновлено."})
 
-
 @router.post("/admin/course/section/{section_id}/delete")
-async def delete_section(request: Request, section_id: int):
+async def delete_section(
+    request: Request,
+    section_id: int,
+    course_service: Annotated[
+        CourseContentService,
+        Depends(get_course_content_service),
+    ],
+):
     if request.session.get("role") != "admin":
         return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
 
-    remove_course_section(section_id)
+    course_service.remove_course_section(section_id)
     return JSONResponse({"ok": True, "message": "Секцію видалено."})
-
 
 @router.get("/admin/tests/{slug}", response_class=HTMLResponse)
 async def edit_test_page(request: Request, slug: str):

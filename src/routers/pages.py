@@ -1,8 +1,11 @@
-from fastapi import APIRouter, Request
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 
+from src.dependencies.course import get_course_content_service
 from src.repositories.site_repository import get_home_blocks, get_site_content
-from src.services.course_content_service import get_courses_for_page
+from src.services.course_content_service_sqlalchemy import CourseContentService
 from src.utils.page_renderer import render_page
 
 router = APIRouter()
@@ -22,6 +25,12 @@ async def home(request: Request):
 
 
 @router.get("/courses", response_class=HTMLResponse)
-async def courses_page(request: Request):
-    courses = get_courses_for_page()
+async def courses_page(
+    request: Request,
+    course_service: Annotated[
+        CourseContentService,
+        Depends(get_course_content_service),
+    ],
+):
+    courses = course_service.get_courses_for_page()
     return render_page(request, "courses.html", courses=courses)
