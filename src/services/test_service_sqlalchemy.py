@@ -1,3 +1,5 @@
+from sqlalchemy.exc import SQLAlchemyError
+
 from src.models.test_question import TestQuestion
 from src.repositories.test_repository_sqlalchemy import TestRepository
 
@@ -51,10 +53,7 @@ class TestService:
         return {
             "title": f"Тест: {course.title}",
             "course_id": course.id,
-            "questions": [
-                self._question_to_dict(question)
-                for question in questions
-            ],
+            "questions": [self._question_to_dict(question) for question in questions],
         }
 
     def calculate_test_result(self, form, questions):
@@ -83,22 +82,19 @@ class TestService:
 
         return score, total, detailed_results
 
-    def save_result_if_logged_in(
-        self,
-        user_id: int | None,
-        course_name: str,
-        score: int,
-        total: int,
-    ):
+    def save_result_if_logged_in(self, user_id: int | None, course_name: str, score: int, total: int):
         if not user_id:
             return
 
-        course = self.repository.get_course_by_slug(course_name)
+        try:
+            course = self.repository.get_course_by_slug(course_name)
+            if not course:
+                return
 
-        if not course:
-            return
-
-        self.repository.save_test_result(user_id, course.id, score, total)
+            self.repository.save_test_result(user_id, course.id, score, total)
+            self.repository.db.commit()
+        except SQLAlchemyError:
+            self.repository.db.rollback()
 
     def get_test_editor_data(self, course_name: str):
         return self.get_test_by_course_name(course_name)
@@ -136,35 +132,39 @@ class TestService:
         is_d_correct: int,
         sort_order: int,
     ):
-        course = self.repository.get_course_by_slug(course_name)
+        try:
+            course = self.repository.get_course_by_slug(course_name)
+            if not course:
+                return False
 
-        if not course:
+            if not self._validate_correct_answers(
+                allow_multiple,
+                is_a_correct,
+                is_b_correct,
+                is_c_correct,
+                is_d_correct,
+            ):
+                return False
+
+            self.repository.create_question(
+                course_id=course.id,
+                question=question.strip(),
+                option_a=option_a.strip(),
+                option_b=option_b.strip(),
+                option_c=option_c.strip(),
+                option_d=option_d.strip(),
+                allow_multiple=allow_multiple,
+                is_a_correct=is_a_correct,
+                is_b_correct=is_b_correct,
+                is_c_correct=is_c_correct,
+                is_d_correct=is_d_correct,
+                sort_order=sort_order,
+            )
+            self.repository.db.commit()
+            return True
+        except SQLAlchemyError:
+            self.repository.db.rollback()
             return False
-
-        if not self._validate_correct_answers(
-            allow_multiple,
-            is_a_correct,
-            is_b_correct,
-            is_c_correct,
-            is_d_correct,
-        ):
-            return False
-
-        self.repository.create_question(
-            course_id=course.id,
-            question=question.strip(),
-            option_a=option_a.strip(),
-            option_b=option_b.strip(),
-            option_c=option_c.strip(),
-            option_d=option_d.strip(),
-            allow_multiple=allow_multiple,
-            is_a_correct=is_a_correct,
-            is_b_correct=is_b_correct,
-            is_c_correct=is_c_correct,
-            is_d_correct=is_d_correct,
-            sort_order=sort_order,
-        )
-        return True
 
     def save_test_question(
         self,
@@ -190,22 +190,32 @@ class TestService:
         ):
             return False
 
-        self.repository.update_question(
-            question_id=question_id,
-            question=question.strip(),
-            option_a=option_a.strip(),
-            option_b=option_b.strip(),
-            option_c=option_c.strip(),
-            option_d=option_d.strip(),
-            allow_multiple=allow_multiple,
-            is_a_correct=is_a_correct,
-            is_b_correct=is_b_correct,
-            is_c_correct=is_c_correct,
-            is_d_correct=is_d_correct,
-            sort_order=sort_order,
-        )
-        return True
+        try:
+            self.repository.update_question(
+                question_id=question_id,
+                question=question.strip(),
+                option_a=option_a.strip(),
+                option_b=option_b.strip(),
+                option_c=option_c.strip(),
+                option_d=option_d.strip(),
+                allow_multiple=allow_multiple,
+                is_a_correct=is_a_correct,
+                is_b_correct=is_b_correct,
+                is_c_correct=is_c_correct,
+                is_d_correct=is_d_correct,
+                sort_order=sort_order,
+            )
+            self.repository.db.commit()
+            return True
+        except SQLAlchemyError:
+            self.repository.db.rollback()
+            return False
 
     def remove_test_question(self, question_id: int):
-        self.repository.delete_question(question_id)
-        return True
+        try:
+            self.repository.delete_question(question_id)
+            self.repository.db.commit()
+            return True
+        except SQLAlchemyError:
+            self.repository.db.rollback()
+            return False

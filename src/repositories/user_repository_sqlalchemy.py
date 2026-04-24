@@ -26,7 +26,7 @@ class UserRepository:
         )
 
         self.db.add(user)
-        self.db.commit()
+        self.db.flush()
         self.db.refresh(user)
 
         return user.id
@@ -41,7 +41,7 @@ class UserRepository:
         )
 
         self.db.add(password_reset)
-        self.db.commit()
+        self.db.flush()
 
     def get_password_reset(self, email: str, code: str) -> PasswordReset | None:
         return (
@@ -56,7 +56,7 @@ class UserRepository:
 
     def delete_password_resets(self, email: str) -> None:
         self.db.query(PasswordReset).filter(PasswordReset.email == email).delete()
-        self.db.commit()
+        self.db.flush()
 
     def update_user_password(self, email: str, password_hash: str) -> None:
         user = self.get_user_by_email(email)
@@ -65,7 +65,7 @@ class UserRepository:
             return
 
         user.password_hash = password_hash
-        self.db.commit()
+        self.db.flush()
 
     def make_user_admin_by_email(self, email: str) -> None:
         user = self.get_user_by_email(email)
@@ -74,4 +74,4 @@ class UserRepository:
             return
 
         user.role = "admin"
-        self.db.commit()
+        self.db.flush()

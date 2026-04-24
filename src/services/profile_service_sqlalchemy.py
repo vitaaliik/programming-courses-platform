@@ -1,3 +1,5 @@
+from sqlalchemy.exc import SQLAlchemyError
+
 from src.repositories.profile_repository_sqlalchemy import ProfileRepository
 
 
@@ -12,7 +14,6 @@ class ProfileService:
             return None
 
         results = self.repository.get_user_results(user_id)
-
         total_tests = len(results)
 
         if total_tests > 0:
@@ -23,7 +24,6 @@ class ProfileService:
             best_score = 0
 
         total_courses = self.repository.get_total_courses()
-
         completed_courses = len(set(r["title"] for r in results))
 
         progress_percent = (
@@ -51,4 +51,10 @@ class ProfileService:
         }
 
     def update_username(self, user_id: int, new_username: str):
-        self.repository.update_username(user_id, new_username)
+        try:
+            self.repository.update_username(user_id, new_username)
+            self.repository.db.commit()
+            return True
+        except SQLAlchemyError:
+            self.repository.db.rollback()
+            return False

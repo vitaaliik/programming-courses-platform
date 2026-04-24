@@ -25,6 +25,8 @@ from src.utils.page_renderer import render_page
 from src.dependencies.course import get_auth_service
 from src.services.auth_service_sqlalchemy import AuthService
 
+from src.core.settings import settings
+
 router = APIRouter()
 
 
@@ -406,5 +408,8 @@ async def delete_test_question_route(
 async def make_admin(
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
 ):
-    auth_service.repository.make_user_admin_by_email("vitaliklutchak12@gmail.com")
-    return {"message": "Ти тепер адмін"}
+    if not settings.admin_email:
+        return {"message": "ADMIN_EMAIL не заданий у .env"}
+
+    auth_service.repository.make_user_admin_by_email(settings.admin_email)
+    return {"message": "Адмін оновлений через email з .env"}

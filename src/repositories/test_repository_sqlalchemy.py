@@ -35,7 +35,7 @@ class TestRepository:
         )
 
         self.db.add(result)
-        self.db.commit()
+        self.db.flush()
 
     def create_question(
         self,
@@ -68,7 +68,7 @@ class TestRepository:
         )
 
         self.db.add(test_question)
-        self.db.commit()
+        self.db.flush()
 
     def update_question(
         self,
@@ -106,7 +106,7 @@ class TestRepository:
         test_question.is_d_correct = is_d_correct
         test_question.sort_order = sort_order
 
-        self.db.commit()
+        self.db.flush()
 
     def delete_question(self, question_id: int) -> None:
         (
@@ -114,4 +114,4 @@ class TestRepository:
             .filter(TestQuestion.id == question_id)
             .delete()
         )
-        self.db.commit()
+        self.db.flush()

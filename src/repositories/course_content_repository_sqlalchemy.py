@@ -67,7 +67,7 @@ class CourseContentRepository:
         )
 
         self.db.add(course)
-        self.db.commit()
+        self.db.flush()
 
     def update_course_main_info(
         self,
@@ -83,7 +83,7 @@ class CourseContentRepository:
         course.page_title = page_title
         course.page_subtitle = page_subtitle
 
-        self.db.commit()
+        self.db.flush()
 
     def create_course_section(
         self,
@@ -100,7 +100,7 @@ class CourseContentRepository:
         )
 
         self.db.add(section)
-        self.db.commit()
+        self.db.flush()
 
     def update_course_section(
         self,
@@ -118,11 +118,11 @@ class CourseContentRepository:
         section.content_html = content_html
         section.sort_order = sort_order
 
-        self.db.commit()
+        self.db.flush()
 
     def delete_course_section(self, section_id: int) -> None:
         self.db.query(CourseSection).filter(CourseSection.id == section_id).delete()
-        self.db.commit()
+        self.db.flush()
 
     def delete_course_by_id(self, course_id: int) -> None:
         self.db.execute(
@@ -139,4 +139,4 @@ class CourseContentRepository:
 
         self.db.query(Course).filter(Course.id == course_id).delete()
 
-        self.db.commit()
+        self.db.flush()

@@ -2,6 +2,7 @@ import random
 from datetime import datetime, timedelta
 
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import SQLAlchemyError
 
 from src.core.security import hash_password, verify_password
 from src.repositories.user_repository_sqlalchemy import UserRepository
@@ -15,14 +16,7 @@ class AuthService:
     def generate_reset_code(self) -> str:
         return str(random.randint(100000, 999999))
 
-    def register_user(
-        self,
-        request,
-        username: str,
-        email: str,
-        password: str,
-        confirm_password: str,
-    ):
+    def register_user(self, request, username: str, email: str, password: str, confirm_password: str):
         username = username.strip()
         email = email.strip().lower()
 
@@ -38,19 +32,24 @@ class AuthService:
         if len(password) > 72:
             return JSONResponse({"ok": False, "message": "Пароль занадто довгий (максимум 72 символи)."})
 
-        existing_user = self.repository.get_user_by_email(email)
+        try:
+            existing_user = self.repository.get_user_by_email(email)
+            if existing_user:
+                return JSONResponse({"ok": False, "message": "Така пошта вже зареєстрована."})
 
-        if existing_user:
-            return JSONResponse({"ok": False, "message": "Така пошта вже зареєстрована."})
+            password_hash = hash_password(password)
+            user_id = self.repository.create_user(username, email, password_hash, "user")
 
-        password_hash = hash_password(password)
-        user_id = self.repository.create_user(username, email, password_hash, "user")
+            self.repository.db.commit()
 
-        request.session["user_id"] = user_id
-        request.session["username"] = username
-        request.session["role"] = "user"
+            request.session["user_id"] = user_id
+            request.session["username"] = username
+            request.session["role"] = "user"
 
-        return JSONResponse({"ok": True, "redirect": "/profile"})
+            return JSONResponse({"ok": True, "redirect": "/profile"})
+        except SQLAlchemyError:
+            self.repository.db.rollback()
+            return JSONResponse({"ok": False, "message": "Помилка бази даних. Реєстрацію не виконано."})
 
     def login_user(self, request, email: str, password: str):
         email = email.strip().lower()
@@ -89,7 +88,12 @@ class AuthService:
         code = self.generate_reset_code()
         expires_at = (datetime.now() + timedelta(minutes=10)).isoformat()
 
-        self.repository.create_password_reset(email, code, expires_at)
+        try:
+            self.repository.create_password_reset(email, code, expires_at)
+            self.repository.db.commit()
+        except SQLAlchemyError:
+            self.repository.db.rollback()
+            return JSONResponse({"ok": False, "message": "Помилка бази даних. Код не створено."})
 
         try:
             send_reset_email(email, code)
@@ -117,13 +121,7 @@ class AuthService:
 
         return JSONResponse({"ok": True, "redirect": f"/reset-password?email={email}&code={code}"})
 
-    def reset_password(
-        self,
-        email: str,
-        code: str,
-        new_password: str,
-        confirm_password: str,
-    ):
+    def reset_password(self, email: str, code: str, new_password: str, confirm_password: str):
         email = email.strip().lower()
         code = code.strip()
 
@@ -149,9 +147,22 @@ class AuthService:
         if datetime.now() > expires_at:
             return JSONResponse({"ok": False, "message": "Час дії коду минув."})
 
-        password_hash = hash_password(new_password)
+        try:
+            password_hash = hash_password(new_password)
+            self.repository.update_user_password(email, password_hash)
+            self.repository.delete_password_resets(email)
+            self.repository.db.commit()
 
-        self.repository.update_user_password(email, password_hash)
-        self.repository.delete_password_resets(email)
+            return JSONResponse({"ok": True, "redirect": "/login"})
+        except SQLAlchemyError:
+            self.repository.db.rollback()
+            return JSONResponse({"ok": False, "message": "Помилка бази даних. Пароль не змінено."})
 
-        return JSONResponse({"ok": True, "redirect": "/login"})
+    def make_user_admin_by_email(self, email: str):
+        try:
+            self.repository.make_user_admin_by_email(email)
+            self.repository.db.commit()
+            return True
+        except SQLAlchemyError:
+            self.repository.db.rollback()
+            return False

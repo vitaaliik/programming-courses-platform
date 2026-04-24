@@ -1,3 +1,5 @@
+from sqlalchemy.exc import SQLAlchemyError
+
 from src.repositories.admin_repository_sqlalchemy import AdminRepository
 
 
@@ -6,10 +8,19 @@ class AdminService:
         self.repository = repository
 
     def get_admin_dashboard_data(self):
-        return {
-            "total_users": self.repository.get_total_users(),
-            "total_courses": self.repository.get_total_courses(),
-            "total_results": self.repository.get_total_results(),
-            "users": self.repository.get_users_statistics(),
-            "recent_results": self.repository.get_recent_results(),
-        }
+        try:
+            return {
+                "total_users": self.repository.get_total_users(),
+                "total_courses": self.repository.get_total_courses(),
+                "total_results": self.repository.get_total_results(),
+                "users": self.repository.get_users_statistics(),
+                "recent_results": self.repository.get_recent_results(),
+            }
+        except SQLAlchemyError:
+            return {
+                "total_users": 0,
+                "total_courses": 0,
+                "total_results": 0,
+                "users": [],
+                "recent_results": [],
+            }

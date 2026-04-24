@@ -66,7 +66,7 @@ class SiteRepository:
         content.hero_title = hero_title
         content.hero_subtitle = hero_subtitle
 
-        self.db.commit()
+        self.db.flush()
 
     def get_home_blocks(self) -> list[dict]:
         blocks = (
@@ -90,7 +90,7 @@ class SiteRepository:
         )
 
         self.db.add(block)
-        self.db.commit()
+        self.db.flush()
 
     def update_home_block(
         self,
@@ -108,8 +108,8 @@ class SiteRepository:
         block.content_html = content_html
         block.sort_order = sort_order
 
-        self.db.commit()
+        self.db.flush()
 
     def delete_home_block(self, block_id: int) -> None:
         self.db.query(HomeBlock).filter(HomeBlock.id == block_id).delete()
-        self.db.commit()
+        self.db.flush()
