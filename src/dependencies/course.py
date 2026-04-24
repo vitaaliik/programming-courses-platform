@@ -12,6 +12,9 @@ from src.services.course_service_sqlalchemy import CourseService
 from src.repositories.test_repository_sqlalchemy import TestRepository
 from src.services.test_service_sqlalchemy import TestService
 
+from src.repositories.user_repository_sqlalchemy import UserRepository
+from src.services.auth_service_sqlalchemy import AuthService
+
 def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()
     try:
@@ -49,3 +52,12 @@ def get_test_service(
     repository: TestRepository = Depends(get_test_repository),
 ) -> TestService:
     return TestService(repository)
+
+def get_user_repository(db: Session = Depends(get_db)) -> UserRepository:
+    return UserRepository(db)
+
+
+def get_auth_service(
+    repository: UserRepository = Depends(get_user_repository),
+) -> AuthService:
+    return AuthService(repository)

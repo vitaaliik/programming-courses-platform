@@ -5,7 +5,6 @@ from src.services.admin_service import (
     add_new_home_block,
     get_admin_dashboard_data,
     get_home_editor_data,
-    make_user_admin_by_email,
     remove_home_block,
     save_home_block,
     update_home_hero,
@@ -18,6 +17,9 @@ from src.services.course_content_service_sqlalchemy import CourseContentService
 
 from src.services.test_service_sqlalchemy import TestService
 from src.utils.page_renderer import render_page
+
+from src.dependencies.course import get_auth_service
+from src.services.auth_service_sqlalchemy import AuthService
 
 router = APIRouter()
 
@@ -384,6 +386,8 @@ async def delete_test_question_route(
 
 
 @router.get("/make-admin")
-async def make_admin():
-    make_user_admin_by_email("vitaliklutchak12@gmail.com")
-    return {"message": "Ти тепер адмін 😎"}
+async def make_admin(
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
+):
+    auth_service.repository.make_user_admin_by_email("vitaliklutchak12@gmail.com")
+    return {"message": "Ти тепер адмін"}
