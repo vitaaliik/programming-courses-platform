@@ -1,19 +1,22 @@
-from fastapi import APIRouter, HTTPException, Request
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 
-from src.services.test_service import (
-    calculate_test_result,
-    get_test_by_course_name,
-    save_result_if_logged_in,
-)
+from src.dependencies.course import get_test_service
+from src.services.test_service_sqlalchemy import TestService
 from src.utils.page_renderer import render_page
 
 router = APIRouter()
 
 
 @router.get("/test/{course_name}", response_class=HTMLResponse)
-async def show_test(request: Request, course_name: str):
-    course = get_test_by_course_name(course_name)
+async def show_test(
+    request: Request,
+    course_name: str,
+    test_service: Annotated[TestService, Depends(get_test_service)],
+):
+    course = test_service.get_test_by_course_name(course_name)
 
     if not course:
         raise HTTPException(status_code=404, detail="Тест для цього курсу не знайдено")
@@ -28,17 +31,24 @@ async def show_test(request: Request, course_name: str):
 
 
 @router.post("/test/{course_name}", response_class=HTMLResponse)
-async def submit_test(request: Request, course_name: str):
-    course = get_test_by_course_name(course_name)
+async def submit_test(
+    request: Request,
+    course_name: str,
+    test_service: Annotated[TestService, Depends(get_test_service)],
+):
+    course = test_service.get_test_by_course_name(course_name)
 
     if not course:
         raise HTTPException(status_code=404, detail="Тест для цього курсу не знайдено")
 
     form = await request.form()
-    score, total, detailed_results = calculate_test_result(form, course["questions"])
+    score, total, detailed_results = test_service.calculate_test_result(
+        form,
+        course["questions"],
+    )
 
     user_id = request.session.get("user_id")
-    save_result_if_logged_in(user_id, course_name, score, total)
+    test_service.save_result_if_logged_in(user_id, course_name, score, total)
 
     return render_page(
         request,

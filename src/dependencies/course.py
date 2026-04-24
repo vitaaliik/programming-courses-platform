@@ -9,6 +9,8 @@ from src.repositories.course_repository_sqlalchemy import CourseRepository
 from src.services.course_content_service_sqlalchemy import CourseContentService
 from src.services.course_service_sqlalchemy import CourseService
 
+from src.repositories.test_repository_sqlalchemy import TestRepository
+from src.services.test_service_sqlalchemy import TestService
 
 def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()
@@ -38,3 +40,12 @@ def get_course_content_service(
     repository: CourseContentRepository = Depends(get_course_content_repository),
 ) -> CourseContentService:
     return CourseContentService(repository)
+
+def get_test_repository(db: Session = Depends(get_db)) -> TestRepository:
+    return TestRepository(db)
+
+
+def get_test_service(
+    repository: TestRepository = Depends(get_test_repository),
+) -> TestService:
+    return TestService(repository)

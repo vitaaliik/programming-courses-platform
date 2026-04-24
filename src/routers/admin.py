@@ -13,15 +13,10 @@ from src.services.admin_service import (
 from typing import Annotated
 
 from fastapi import Depends
-from src.dependencies.course import get_course_content_service
+from src.dependencies.course import get_course_content_service, get_test_service
 from src.services.course_content_service_sqlalchemy import CourseContentService
 
-from src.services.test_service import (
-    add_new_test_question,
-    get_test_editor_data,
-    remove_test_question,
-    save_test_question,
-)
+from src.services.test_service_sqlalchemy import TestService
 from src.utils.page_renderer import render_page
 
 router = APIRouter()
@@ -266,7 +261,11 @@ async def delete_section(
     return JSONResponse({"ok": True, "message": "Секцію видалено."})
 
 @router.get("/admin/tests/{slug}", response_class=HTMLResponse)
-async def edit_test_page(request: Request, slug: str):
+async def edit_test_page(
+    request: Request,
+    slug: str,
+    test_service: Annotated[TestService, Depends(get_test_service)],
+):
     user_id = request.session.get("user_id")
 
     if not user_id:
@@ -275,7 +274,8 @@ async def edit_test_page(request: Request, slug: str):
     if request.session.get("role") != "admin":
         return RedirectResponse(url="/profile", status_code=303)
 
-    test_data = get_test_editor_data(slug)
+    test_data = test_service.get_test_editor_data(slug)
+
     if not test_data:
         return RedirectResponse(url="/admin", status_code=303)
 
@@ -292,6 +292,7 @@ async def edit_test_page(request: Request, slug: str):
 async def add_test_question_route(
     request: Request,
     slug: str,
+    test_service: Annotated[TestService, Depends(get_test_service)],
     question: str = Form(...),
     option_a: str = Form(...),
     option_b: str = Form(...),
@@ -307,7 +308,7 @@ async def add_test_question_route(
     if request.session.get("role") != "admin":
         return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
 
-    ok = add_new_test_question(
+    ok = test_service.add_new_test_question(
         slug,
         question,
         option_a,
@@ -332,6 +333,7 @@ async def add_test_question_route(
 async def update_test_question_route(
     request: Request,
     question_id: int,
+    test_service: Annotated[TestService, Depends(get_test_service)],
     question: str = Form(...),
     option_a: str = Form(...),
     option_b: str = Form(...),
@@ -347,7 +349,7 @@ async def update_test_question_route(
     if request.session.get("role") != "admin":
         return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
 
-    ok = save_test_question(
+    ok = test_service.save_test_question(
         question_id,
         question,
         option_a,
@@ -369,11 +371,15 @@ async def update_test_question_route(
 
 
 @router.post("/admin/tests/question/{question_id}/delete")
-async def delete_test_question_route(request: Request, question_id: int):
+async def delete_test_question_route(
+    request: Request,
+    question_id: int,
+    test_service: Annotated[TestService, Depends(get_test_service)],
+):
     if request.session.get("role") != "admin":
         return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
 
-    remove_test_question(question_id)
+    test_service.remove_test_question(question_id)
     return JSONResponse({"ok": True, "message": "Питання видалено."})
 
 
