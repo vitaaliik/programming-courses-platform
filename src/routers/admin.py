@@ -1,14 +1,18 @@
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 
-from src.services.admin_service import (
-    add_new_home_block,
-    get_admin_dashboard_data,
-    get_home_editor_data,
-    remove_home_block,
-    save_home_block,
-    update_home_hero,
+from src.dependencies.course import (
+    get_admin_service,
+    get_auth_service,
+    get_course_content_service,
+    get_site_service,
+    get_test_service,
 )
+from src.services.admin_service_sqlalchemy import AdminService
+from src.services.auth_service_sqlalchemy import AuthService
+from src.services.course_content_service_sqlalchemy import CourseContentService
+from src.services.site_service_sqlalchemy import SiteService
+from src.services.test_service_sqlalchemy import TestService
 from typing import Annotated
 
 from fastapi import Depends
@@ -27,6 +31,7 @@ router = APIRouter()
 @router.get("/admin", response_class=HTMLResponse)
 async def admin_page(
     request: Request,
+    admin_service: Annotated[AdminService, Depends(get_admin_service)],
     course_service: Annotated[
         CourseContentService,
         Depends(get_course_content_service),
@@ -40,14 +45,17 @@ async def admin_page(
     if request.session.get("role") != "admin":
         return RedirectResponse(url="/profile", status_code=303)
 
-    data = get_admin_dashboard_data()
+    data = admin_service.get_admin_dashboard_data()
     courses = course_service.get_courses_for_admin()
 
     return render_page(request, "admin.html", **data, courses=courses)
 
 
 @router.get("/admin/home", response_class=HTMLResponse)
-async def edit_home_page(request: Request):
+async def edit_home_page(
+    request: Request,
+    site_service: Annotated[SiteService, Depends(get_site_service)],
+):
     user_id = request.session.get("user_id")
 
     if not user_id:
@@ -56,20 +64,21 @@ async def edit_home_page(request: Request):
     if request.session.get("role") != "admin":
         return RedirectResponse(url="/profile", status_code=303)
 
-    data = get_home_editor_data()
+    data = site_service.get_home_editor_data()
     return render_page(request, "admin_home_editor.html", **data)
 
 
 @router.post("/admin/home/update-hero")
 async def update_home_hero_route(
     request: Request,
+    site_service: Annotated[SiteService, Depends(get_site_service)],
     hero_title: str = Form(...),
     hero_subtitle: str = Form(...),
 ):
     if request.session.get("role") != "admin":
         return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
 
-    update_home_hero({
+    site_service.update_home_hero({
         "hero_title": hero_title,
         "hero_subtitle": hero_subtitle,
     })
@@ -79,6 +88,7 @@ async def update_home_hero_route(
 @router.post("/admin/home/block/add")
 async def add_home_block_route(
     request: Request,
+    site_service: Annotated[SiteService, Depends(get_site_service)],
     title: str = Form(...),
     content_html: str = Form(...),
     sort_order: int = Form(...),
@@ -86,7 +96,8 @@ async def add_home_block_route(
     if request.session.get("role") != "admin":
         return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
 
-    ok = add_new_home_block(title, content_html, sort_order)
+    ok = site_service.add_new_home_block(title, content_html, sort_order)
+
     if not ok:
         return JSONResponse({"ok": False, "message": "Не вдалося додати блок."})
 
@@ -97,6 +108,7 @@ async def add_home_block_route(
 async def update_home_block_route(
     request: Request,
     block_id: int,
+    site_service: Annotated[SiteService, Depends(get_site_service)],
     title: str = Form(...),
     content_html: str = Form(...),
     sort_order: int = Form(...),
@@ -104,7 +116,8 @@ async def update_home_block_route(
     if request.session.get("role") != "admin":
         return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
 
-    ok = save_home_block(block_id, title, content_html, sort_order)
+    ok = site_service.save_home_block(block_id, title, content_html, sort_order)
+
     if not ok:
         return JSONResponse({"ok": False, "message": "Не вдалося оновити блок."})
 
@@ -112,11 +125,15 @@ async def update_home_block_route(
 
 
 @router.post("/admin/home/block/{block_id}/delete")
-async def delete_home_block_route(request: Request, block_id: int):
+async def delete_home_block_route(
+    request: Request,
+    block_id: int,
+    site_service: Annotated[SiteService, Depends(get_site_service)],
+):
     if request.session.get("role") != "admin":
         return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
 
-    remove_home_block(block_id)
+    site_service.remove_home_block(block_id)
     return JSONResponse({"ok": True, "message": "Блок видалено."})
 
 

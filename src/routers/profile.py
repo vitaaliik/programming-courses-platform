@@ -1,21 +1,26 @@
-from fastapi import APIRouter, Form, Request
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 
-from src.core.database import get_db_connection
-from src.services.profile_service import get_profile_data
+from src.dependencies.course import get_profile_service
+from src.services.profile_service_sqlalchemy import ProfileService
 from src.utils.page_renderer import render_page
 
 router = APIRouter()
 
 
 @router.get("/profile", response_class=HTMLResponse)
-async def profile_page(request: Request):
+async def profile_page(
+    request: Request,
+    profile_service: Annotated[ProfileService, Depends(get_profile_service)],
+):
     user_id = request.session.get("user_id")
 
     if not user_id:
         return RedirectResponse(url="/login", status_code=303)
 
-    profile_data = get_profile_data(user_id)
+    profile_data = profile_service.get_profile_data(user_id)
 
     if not profile_data:
         request.session.clear()
@@ -27,6 +32,7 @@ async def profile_page(request: Request):
 @router.post("/profile/update-username")
 async def update_username(
     request: Request,
+    profile_service: Annotated[ProfileService, Depends(get_profile_service)],
     new_username: str = Form(...),
 ):
     user_id = request.session.get("user_id")
@@ -45,20 +51,7 @@ async def update_username(
     if len(new_username) > 30:
         return JSONResponse({"ok": False, "message": "Нікнейм занадто довгий (максимум 30 символів)."})
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute(
-        """
-        UPDATE users
-        SET username = ?
-        WHERE id = ?
-        """,
-        (new_username, user_id),
-    )
-
-    conn.commit()
-    conn.close()
+    profile_service.update_username(user_id, new_username)
 
     request.session["username"] = new_username
 

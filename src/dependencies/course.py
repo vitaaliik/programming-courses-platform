@@ -15,6 +15,14 @@ from src.services.test_service_sqlalchemy import TestService
 from src.repositories.user_repository_sqlalchemy import UserRepository
 from src.services.auth_service_sqlalchemy import AuthService
 
+from src.repositories.admin_repository_sqlalchemy import AdminRepository
+from src.repositories.site_repository_sqlalchemy import SiteRepository
+from src.services.admin_service_sqlalchemy import AdminService
+from src.services.site_service_sqlalchemy import SiteService
+
+from src.repositories.profile_repository_sqlalchemy import ProfileRepository
+from src.services.profile_service_sqlalchemy import ProfileService
+
 def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()
     try:
@@ -61,3 +69,31 @@ def get_auth_service(
     repository: UserRepository = Depends(get_user_repository),
 ) -> AuthService:
     return AuthService(repository)
+
+def get_site_repository(db: Session = Depends(get_db)) -> SiteRepository:
+    return SiteRepository(db)
+
+
+def get_site_service(
+    repository: SiteRepository = Depends(get_site_repository),
+) -> SiteService:
+    return SiteService(repository)
+
+
+def get_admin_repository(db: Session = Depends(get_db)) -> AdminRepository:
+    return AdminRepository(db)
+
+
+def get_admin_service(
+    repository: AdminRepository = Depends(get_admin_repository),
+) -> AdminService:
+    return AdminService(repository)
+
+def get_profile_repository(db: Session = Depends(get_db)) -> ProfileRepository:
+    return ProfileRepository(db)
+
+
+def get_profile_service(
+    repository: ProfileRepository = Depends(get_profile_repository),
+) -> ProfileService:
+    return ProfileService(repository)

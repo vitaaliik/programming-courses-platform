@@ -3,18 +3,21 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 
-from src.dependencies.course import get_course_content_service
-from src.repositories.site_repository import get_home_blocks, get_site_content
+from src.dependencies.course import get_course_content_service, get_site_service
 from src.services.course_content_service_sqlalchemy import CourseContentService
+from src.services.site_service_sqlalchemy import SiteService
 from src.utils.page_renderer import render_page
 
 router = APIRouter()
 
 
 @router.get("/", response_class=HTMLResponse)
-async def home(request: Request):
-    site_content = get_site_content()
-    home_blocks = get_home_blocks()
+async def home(
+    request: Request,
+    site_service: Annotated[SiteService, Depends(get_site_service)],
+):
+    site_content = site_service.get_site_content()
+    home_blocks = site_service.get_home_blocks()
 
     return render_page(
         request,
