@@ -1,93 +1,77 @@
-from src.core.database import get_db_connection
+from sqlalchemy.orm import Session
+
+from src.models.password_reset import PasswordReset
+from src.models.user import User
 
 
-def get_user_by_email(email: str):
-    conn = get_db_connection()
-    cursor = conn.cursor()
+class UserRepository:
+    def __init__(self, db: Session):
+        self.db = db
 
-    cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
-    user = cursor.fetchone()
+    def get_user_by_email(self, email: str) -> User | None:
+        return self.db.query(User).filter(User.email == email).first()
 
-    conn.close()
-    return user
+    def create_user(
+        self,
+        username: str,
+        email: str,
+        password_hash: str,
+        role: str = "user",
+    ) -> int:
+        user = User(
+            username=username,
+            email=email,
+            password_hash=password_hash,
+            role=role,
+        )
 
+        self.db.add(user)
+        self.db.flush()
+        self.db.refresh(user)
 
-def create_user(username: str, email: str, password_hash: str, role: str = "user"):
-    conn = get_db_connection()
-    cursor = conn.cursor()
+        return user.id
 
-    cursor.execute(
-        """
-        INSERT INTO users (username, email, password_hash, role)
-        VALUES (?, ?, ?, ?)
-        """,
-        (username, email, password_hash, role),
-    )
+    def create_password_reset(self, email: str, code: str, expires_at: str) -> None:
+        self.db.query(PasswordReset).filter(PasswordReset.email == email).delete()
 
-    user_id = cursor.lastrowid
+        password_reset = PasswordReset(
+            email=email,
+            reset_code=code,
+            expires_at=expires_at,
+        )
 
-    conn.commit()
-    conn.close()
+        self.db.add(password_reset)
+        self.db.flush()
 
-    return user_id
+    def get_password_reset(self, email: str, code: str) -> PasswordReset | None:
+        return (
+            self.db.query(PasswordReset)
+            .filter(
+                PasswordReset.email == email,
+                PasswordReset.reset_code == code,
+            )
+            .order_by(PasswordReset.id.desc())
+            .first()
+        )
 
-def create_password_reset(email: str, code: str, expires_at: str):
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    def delete_password_resets(self, email: str) -> None:
+        self.db.query(PasswordReset).filter(PasswordReset.email == email).delete()
+        self.db.flush()
 
-    cursor.execute("DELETE FROM password_resets WHERE email = ?", (email,))
-    cursor.execute(
-        """
-        INSERT INTO password_resets (email, reset_code, expires_at)
-        VALUES (?, ?, ?)
-        """,
-        (email, code, expires_at),
-    )
+    def update_user_password(self, email: str, password_hash: str) -> None:
+        user = self.get_user_by_email(email)
 
-    conn.commit()
-    conn.close()
+        if not user:
+            return
 
+        user.password_hash = password_hash
+        self.db.flush()
 
-def get_password_reset(email: str, code: str):
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    def make_user_admin_by_email(self, email: str) -> None:
+        user = self.get_user_by_email(email)
 
-    cursor.execute(
-        """
-        SELECT * FROM password_resets
-        WHERE email = ? AND reset_code = ?
-        ORDER BY id DESC LIMIT 1
-        """,
-        (email, code),
-    )
-    reset_row = cursor.fetchone()
+        if not user:
+            return
 
-    conn.close()
-    return reset_row
-
-
-def delete_password_resets(email: str):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("DELETE FROM password_resets WHERE email = ?", (email,))
-
-    conn.commit()
-    conn.close()
-
-
-def update_user_password(email: str, password_hash: str):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute(
-        """
-        UPDATE users
-        SET password_hash = ?
-        WHERE email = ?
-        """,
-        (password_hash, email),
-    )
-
-    conn.commit()
-    conn.close()
+        user.role = "admin"
+        self.db.flush()

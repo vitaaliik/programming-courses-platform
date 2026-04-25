@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 
 from src.dependencies.course import get_course_service
 from src.schemas.course import CourseRead
-from src.services.course_service_sqlalchemy import CourseService
+from src.services.course_service import CourseService
 
 router = APIRouter(prefix="/debug/sqlalchemy", tags=["sqlalchemy-demo"])
 

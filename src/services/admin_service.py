@@ -1,6 +1,6 @@
 from sqlalchemy.exc import SQLAlchemyError
 
-from src.repositories.admin_repository_sqlalchemy import AdminRepository
+from src.repositories.admin_repository import AdminRepository
 
 
 class AdminService:

@@ -1,4 +1,4 @@
-from src.repositories.course_repository_sqlalchemy import CourseRepository
+from src.repositories.course_repository import CourseRepository
 
 
 class CourseService:

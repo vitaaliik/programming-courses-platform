@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 
 from src.dependencies.course import get_profile_service
-from src.services.profile_service_sqlalchemy import ProfileService
+from src.services.profile_service import ProfileService
 from src.utils.page_renderer import render_page
 
 router = APIRouter()

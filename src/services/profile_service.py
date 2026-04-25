@@ -1,6 +1,6 @@
 from sqlalchemy.exc import SQLAlchemyError
 
-from src.repositories.profile_repository_sqlalchemy import ProfileRepository
+from src.repositories.profile_repository import ProfileRepository
 
 
 class ProfileService:

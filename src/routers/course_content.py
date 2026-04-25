@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 
 from src.dependencies.course import get_course_content_service
-from src.services.course_content_service_sqlalchemy import CourseContentService
+from src.services.course_content_service import CourseContentService
 from src.utils.page_renderer import render_page
 
 router = APIRouter()

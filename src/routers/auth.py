@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from src.dependencies.course import get_auth_service
-from src.services.auth_service_sqlalchemy import AuthService
+from src.services.auth_service import AuthService
 from src.utils.page_renderer import render_page
 
 router = APIRouter()

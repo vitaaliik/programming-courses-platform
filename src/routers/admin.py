@@ -8,22 +8,22 @@ from src.dependencies.course import (
     get_site_service,
     get_test_service,
 )
-from src.services.admin_service_sqlalchemy import AdminService
-from src.services.auth_service_sqlalchemy import AuthService
-from src.services.course_content_service_sqlalchemy import CourseContentService
-from src.services.site_service_sqlalchemy import SiteService
-from src.services.test_service_sqlalchemy import TestService
+from src.services.admin_service import AdminService
+from src.services.auth_service import AuthService
+from src.services.course_content_service import CourseContentService
+from src.services.site_service import SiteService
+from src.services.test_service import TestService
 from typing import Annotated
 
 from fastapi import Depends
 from src.dependencies.course import get_course_content_service, get_test_service
-from src.services.course_content_service_sqlalchemy import CourseContentService
+from src.services.course_content_service import CourseContentService
 
-from src.services.test_service_sqlalchemy import TestService
+from src.services.test_service import TestService
 from src.utils.page_renderer import render_page
 
 from src.dependencies.course import get_auth_service
-from src.services.auth_service_sqlalchemy import AuthService
+from src.services.auth_service import AuthService
 
 from src.core.settings import settings
 

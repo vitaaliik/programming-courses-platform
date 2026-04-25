@@ -4,24 +4,24 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from src.core.database_sqlalchemy import SessionLocal
-from src.repositories.course_content_repository_sqlalchemy import CourseContentRepository
-from src.repositories.course_repository_sqlalchemy import CourseRepository
-from src.services.course_content_service_sqlalchemy import CourseContentService
-from src.services.course_service_sqlalchemy import CourseService
+from src.repositories.course_content_repository import CourseContentRepository
+from src.repositories.course_repository import CourseRepository
+from src.services.course_content_service import CourseContentService
+from src.services.course_service import CourseService
 
-from src.repositories.test_repository_sqlalchemy import TestRepository
-from src.services.test_service_sqlalchemy import TestService
+from src.repositories.test_repository import TestRepository
+from src.services.test_service import TestService
 
-from src.repositories.user_repository_sqlalchemy import UserRepository
-from src.services.auth_service_sqlalchemy import AuthService
+from src.repositories.user_repository import UserRepository
+from src.services.auth_service import AuthService
 
-from src.repositories.admin_repository_sqlalchemy import AdminRepository
-from src.repositories.site_repository_sqlalchemy import SiteRepository
-from src.services.admin_service_sqlalchemy import AdminService
-from src.services.site_service_sqlalchemy import SiteService
+from src.repositories.admin_repository import AdminRepository
+from src.repositories.site_repository import SiteRepository
+from src.services.admin_service import AdminService
+from src.services.site_service import SiteService
 
-from src.repositories.profile_repository_sqlalchemy import ProfileRepository
-from src.services.profile_service_sqlalchemy import ProfileService
+from src.repositories.profile_repository import ProfileRepository
+from src.services.profile_service import ProfileService
 
 def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()

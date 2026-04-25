@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.core.security import hash_password, verify_password
-from src.repositories.user_repository_sqlalchemy import UserRepository
+from src.repositories.user_repository import UserRepository
 from src.utils.email_sender import send_reset_email
 
 

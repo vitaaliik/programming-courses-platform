@@ -1,7 +1,7 @@
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.models.test_question import TestQuestion
-from src.repositories.test_repository_sqlalchemy import TestRepository
+from src.repositories.test_repository import TestRepository
 
 
 class TestService:

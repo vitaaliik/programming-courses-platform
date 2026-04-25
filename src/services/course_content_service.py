@@ -1,6 +1,6 @@
 from sqlalchemy.exc import SQLAlchemyError
 
-from src.repositories.course_content_repository_sqlalchemy import CourseContentRepository
+from src.repositories.course_content_repository import CourseContentRepository
 
 
 class CourseContentService:

@@ -1,6 +1,6 @@
 from sqlalchemy.exc import SQLAlchemyError
 
-from src.repositories.site_repository_sqlalchemy import SiteRepository
+from src.repositories.site_repository import SiteRepository
 
 
 class SiteService:
