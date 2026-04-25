@@ -1,6 +1,9 @@
-from fastapi import APIRouter, Form, Request
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 
+from src.core.settings import settings
 from src.dependencies.course import (
     get_admin_service,
     get_auth_service,
@@ -13,19 +16,7 @@ from src.services.auth_service import AuthService
 from src.services.course_content_service import CourseContentService
 from src.services.site_service import SiteService
 from src.services.test_service import TestService
-from typing import Annotated
-
-from fastapi import Depends
-from src.dependencies.course import get_course_content_service, get_test_service
-from src.services.course_content_service import CourseContentService
-
-from src.services.test_service import TestService
 from src.utils.page_renderer import render_page
-
-from src.dependencies.course import get_auth_service
-from src.services.auth_service import AuthService
-
-from src.core.settings import settings
 
 router = APIRouter()
 
@@ -84,6 +75,7 @@ async def update_home_hero_route(
         "hero_title": hero_title,
         "hero_subtitle": hero_subtitle,
     })
+
     return JSONResponse({"ok": True, "message": "Hero-блок оновлено."})
 
 
@@ -98,10 +90,7 @@ async def add_home_block_route(
     if request.session.get("role") != "admin":
         return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
 
-    ok = site_service.add_new_home_block(title, content_html, sort_order)
-
-    if not ok:
-        return JSONResponse({"ok": False, "message": "Не вдалося додати блок."})
+    site_service.add_new_home_block(title, content_html, sort_order)
 
     return JSONResponse({"ok": True, "message": "Блок додано."})
 
@@ -118,10 +107,7 @@ async def update_home_block_route(
     if request.session.get("role") != "admin":
         return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
 
-    ok = site_service.save_home_block(block_id, title, content_html, sort_order)
-
-    if not ok:
-        return JSONResponse({"ok": False, "message": "Не вдалося оновити блок."})
+    site_service.save_home_block(block_id, title, content_html, sort_order)
 
     return JSONResponse({"ok": True, "message": "Блок оновлено."})
 
@@ -136,6 +122,7 @@ async def delete_home_block_route(
         return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
 
     site_service.remove_home_block(block_id)
+
     return JSONResponse({"ok": True, "message": "Блок видалено."})
 
 
@@ -154,6 +141,7 @@ async def create_course_route(
         return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
 
     result = course_service.create_new_course(slug, title, description)
+
     return JSONResponse(result)
 
 
@@ -170,6 +158,7 @@ async def delete_course_route(
         return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
 
     result = course_service.remove_course(slug)
+
     return JSONResponse(result)
 
 
@@ -191,9 +180,6 @@ async def edit_course_page(
         return RedirectResponse(url="/profile", status_code=303)
 
     course = course_service.get_course_editor_data(slug)
-
-    if not course:
-        return RedirectResponse(url="/admin", status_code=303)
 
     return render_page(
         request,
@@ -217,10 +203,7 @@ async def update_course_main(
     if request.session.get("role") != "admin":
         return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
 
-    ok = course_service.save_course_main_info(slug, page_title, page_subtitle)
-
-    if not ok:
-        return JSONResponse({"ok": False, "message": "Курс не знайдено."})
+    course_service.save_course_main_info(slug, page_title, page_subtitle)
 
     return JSONResponse({"ok": True, "message": "Основну інформацію курсу оновлено."})
 
@@ -240,10 +223,7 @@ async def add_course_section(
     if request.session.get("role") != "admin":
         return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
 
-    ok = course_service.add_new_course_section(slug, title, content_html, sort_order)
-
-    if not ok:
-        return JSONResponse({"ok": False, "message": "Не вдалося додати секцію."})
+    course_service.add_new_course_section(slug, title, content_html, sort_order)
 
     return JSONResponse({"ok": True, "message": "Нову секцію додано."})
 
@@ -264,7 +244,9 @@ async def update_section(
         return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
 
     course_service.save_course_section(section_id, title, content_html, sort_order)
+
     return JSONResponse({"ok": True, "message": "Секцію оновлено."})
+
 
 @router.post("/admin/course/section/{section_id}/delete")
 async def delete_section(
@@ -279,7 +261,9 @@ async def delete_section(
         return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
 
     course_service.remove_course_section(section_id)
+
     return JSONResponse({"ok": True, "message": "Секцію видалено."})
+
 
 @router.get("/admin/tests/{slug}", response_class=HTMLResponse)
 async def edit_test_page(
@@ -296,9 +280,6 @@ async def edit_test_page(
         return RedirectResponse(url="/profile", status_code=303)
 
     test_data = test_service.get_test_editor_data(slug)
-
-    if not test_data:
-        return RedirectResponse(url="/admin", status_code=303)
 
     return render_page(
         request,
@@ -329,7 +310,7 @@ async def add_test_question_route(
     if request.session.get("role") != "admin":
         return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
 
-    ok = test_service.add_new_test_question(
+    test_service.add_new_test_question(
         slug,
         question,
         option_a,
@@ -343,9 +324,6 @@ async def add_test_question_route(
         is_d_correct,
         sort_order,
     )
-
-    if not ok:
-        return JSONResponse({"ok": False, "message": "Не вдалося додати питання. Перевір правильні відповіді."})
 
     return JSONResponse({"ok": True, "message": "Питання додано."})
 
@@ -370,7 +348,7 @@ async def update_test_question_route(
     if request.session.get("role") != "admin":
         return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
 
-    ok = test_service.save_test_question(
+    test_service.save_test_question(
         question_id,
         question,
         option_a,
@@ -385,9 +363,6 @@ async def update_test_question_route(
         sort_order,
     )
 
-    if not ok:
-        return JSONResponse({"ok": False, "message": "Не вдалося оновити питання. Перевір правильні відповіді."})
-
     return JSONResponse({"ok": True, "message": "Питання оновлено."})
 
 
@@ -401,6 +376,7 @@ async def delete_test_question_route(
         return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
 
     test_service.remove_test_question(question_id)
+
     return JSONResponse({"ok": True, "message": "Питання видалено."})
 
 
@@ -411,5 +387,6 @@ async def make_admin(
     if not settings.admin_email:
         return {"message": "ADMIN_EMAIL не заданий у .env"}
 
-    auth_service.repository.make_user_admin_by_email(settings.admin_email)
+    auth_service.make_user_admin_by_email(settings.admin_email)
+
     return {"message": "Адмін оновлений через email з .env"}

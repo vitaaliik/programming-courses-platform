@@ -7,7 +7,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from src.core.security import hash_password, verify_password
 from src.repositories.user_repository import UserRepository
 from src.utils.email_sender import send_reset_email
-
+from src.core.exceptions import DatabaseException
 
 class AuthService:
     def __init__(self, repository: UserRepository):
@@ -163,6 +163,7 @@ class AuthService:
             self.repository.make_user_admin_by_email(email)
             self.repository.db.commit()
             return True
-        except SQLAlchemyError:
+
+        except SQLAlchemyError as exc:
             self.repository.db.rollback()
-            return False
+            raise DatabaseException("Не вдалося оновити роль користувача") from exc

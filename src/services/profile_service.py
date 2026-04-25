@@ -1,5 +1,6 @@
 from sqlalchemy.exc import SQLAlchemyError
 
+from src.core.exceptions import DatabaseException, NotFoundException, ValidationException
 from src.repositories.profile_repository import ProfileRepository
 
 
@@ -11,7 +12,7 @@ class ProfileService:
         user = self.repository.get_user(user_id)
 
         if not user:
-            return None
+            raise NotFoundException("Користувача не знайдено.")
 
         results = self.repository.get_user_results(user_id)
         total_tests = len(results)
@@ -32,8 +33,6 @@ class ProfileService:
             else 0
         )
 
-        recent_results = results[:4]
-
         return {
             "profile_user": {
                 "username": user.username,
@@ -41,7 +40,7 @@ class ProfileService:
                 "created_at": user.created_at,
             },
             "results": results,
-            "recent_results": recent_results,
+            "recent_results": results[:4],
             "total_tests": total_tests,
             "avg_score": round(avg_score, 1),
             "best_score": round(best_score, 1),
@@ -51,10 +50,31 @@ class ProfileService:
         }
 
     def update_username(self, user_id: int, new_username: str):
+        new_username = new_username.strip()
+
+        if not new_username:
+            raise ValidationException("Нікнейм не може бути порожнім.")
+
+        if len(new_username) < 2:
+            raise ValidationException("Нікнейм має містити щонайменше 2 символи.")
+
+        if len(new_username) > 30:
+            raise ValidationException("Нікнейм занадто довгий. Максимум 30 символів.")
+
         try:
+            user = self.repository.get_user(user_id)
+
+            if not user:
+                raise NotFoundException("Користувача не знайдено.")
+
             self.repository.update_username(user_id, new_username)
             self.repository.db.commit()
             return True
-        except SQLAlchemyError:
+
+        except (NotFoundException, ValidationException):
             self.repository.db.rollback()
-            return False
+            raise
+
+        except SQLAlchemyError as exc:
+            self.repository.db.rollback()
+            raise DatabaseException("Не вдалося оновити нікнейм") from exc

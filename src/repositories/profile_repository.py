@@ -15,11 +15,12 @@ class ProfileRepository:
 
     def update_username(self, user_id: int, new_username: str) -> None:
         user = self.get_user(user_id)
+
         if not user:
             return
 
         user.username = new_username
-        self.db.commit()
+        self.db.flush()
 
     def get_user_results(self, user_id: int):
         rows = (
@@ -38,13 +39,13 @@ class ProfileRepository:
 
         return [
             {
-                "score": r.score,
-                "total": r.total,
-                "passed_at": r.passed_at,
-                "title": r.title,
-                "slug": r.slug,
+                "score": row.score,
+                "total": row.total,
+                "passed_at": row.passed_at,
+                "title": row.title,
+                "slug": row.slug,
             }
-            for r in rows
+            for row in rows
         ]
 
     def get_total_courses(self) -> int:
