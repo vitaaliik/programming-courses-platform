@@ -6,20 +6,20 @@ class AppException(Exception):
 
 
 class NotFoundException(AppException):
-    def __init__(self, message: str = "Ресурс не знайдено"):
+    def __init__(self, message: str = "Resource not found"):
         super().__init__(404, message)
 
 
 class DatabaseException(AppException):
-    def __init__(self, message: str = "Помилка бази даних"):
+    def __init__(self, message: str = "Database error"):
         super().__init__(500, message)
 
 
 class ValidationException(AppException):
-    def __init__(self, message: str = "Некоректні дані"):
+    def __init__(self, message: str = "Incorrect data"):
         super().__init__(400, message)
 
 
 class PermissionException(AppException):
-    def __init__(self, message: str = "Недостатньо прав"):
+    def __init__(self, message: str = "Permission required"):
         super().__init__(403, message)

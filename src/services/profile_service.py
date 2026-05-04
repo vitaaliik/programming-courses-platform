@@ -12,7 +12,7 @@ class ProfileService:
         user = self.repository.get_user(user_id)
 
         if not user:
-            raise NotFoundException("Користувача не знайдено.")
+            raise NotFoundException("User not found")
 
         results = self.repository.get_user_results(user_id)
         total_tests = len(results)
@@ -53,19 +53,19 @@ class ProfileService:
         new_username = new_username.strip()
 
         if not new_username:
-            raise ValidationException("Нікнейм не може бути порожнім.")
+            raise ValidationException("Username cannot be empty")
 
         if len(new_username) < 2:
-            raise ValidationException("Нікнейм має містити щонайменше 2 символи.")
+            raise ValidationException("Username must contain at least 2 characters")
 
         if len(new_username) > 30:
-            raise ValidationException("Нікнейм занадто довгий. Максимум 30 символів.")
+            raise ValidationException("Username is too long. Maximum length is 30 characters")
 
         try:
             user = self.repository.get_user(user_id)
 
             if not user:
-                raise NotFoundException("Користувача не знайдено.")
+                raise NotFoundException("User not found")
 
             self.repository.update_username(user_id, new_username)
             self.repository.db.commit()
@@ -77,4 +77,4 @@ class ProfileService:
 
         except SQLAlchemyError as exc:
             self.repository.db.rollback()
-            raise DatabaseException("Не вдалося оновити нікнейм") from exc
+            raise DatabaseException("Failed to update username") from exc

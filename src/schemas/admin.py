@@ -26,3 +26,11 @@ class RecentTestResultDTO(BaseModel):
     passed_at: datetime | None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class AdminDashboardDTO(BaseModel):
+    total_users: int
+    total_courses: int
+    total_results: int
+    users: list[AdminUserStatisticsDTO]
+    recent_results: list[RecentTestResultDTO]

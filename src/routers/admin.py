@@ -38,7 +38,7 @@ async def admin_page(
     if request.session.get("role") != "admin":
         return RedirectResponse(url="/profile", status_code=303)
 
-    data = admin_service.get_admin_dashboard_data()
+    data = admin_service.get_admin_dashboard_data().model_dump()
     courses = course_service.get_courses_for_admin()
 
     return render_page(request, "admin.html", **data, courses=courses)

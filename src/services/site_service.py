@@ -19,7 +19,7 @@ class SiteService:
         hero_subtitle = data["hero_subtitle"].strip()
 
         if not hero_title or not hero_subtitle:
-            raise ValidationException("Заголовок і підзаголовок не можуть бути порожніми.")
+            raise ValidationException("Title and subtitle cannot be empty")
 
         try:
             self.repository.update_site_hero(hero_title, hero_subtitle)
@@ -28,7 +28,7 @@ class SiteService:
 
         except SQLAlchemyError as exc:
             self.repository.db.rollback()
-            raise DatabaseException("Не вдалося оновити hero-блок") from exc
+            raise DatabaseException("Failed to update hero block") from exc
 
     def get_home_editor_data(self):
         return {
@@ -41,7 +41,7 @@ class SiteService:
         content_html = content_html.strip()
 
         if not title:
-            raise ValidationException("Назва блоку не може бути порожньою.")
+            raise ValidationException("Block title cannot be empty")
 
         try:
             self.repository.create_home_block(title, content_html, sort_order)
@@ -50,14 +50,14 @@ class SiteService:
 
         except SQLAlchemyError as exc:
             self.repository.db.rollback()
-            raise DatabaseException("Не вдалося додати блок головної сторінки") from exc
+            raise DatabaseException("Failed to add home page block") from exc
 
     def save_home_block(self, block_id: int, title: str, content_html: str, sort_order: int):
         title = title.strip()
         content_html = content_html.strip()
 
         if not title:
-            raise ValidationException("Назва блоку не може бути порожньою.")
+            raise ValidationException("Block title cannot be empty")
 
         try:
             self.repository.update_home_block(block_id, title, content_html, sort_order)
@@ -66,7 +66,7 @@ class SiteService:
 
         except SQLAlchemyError as exc:
             self.repository.db.rollback()
-            raise DatabaseException("Не вдалося оновити блок головної сторінки") from exc
+            raise DatabaseException("Failed to update home page block") from exc
 
     def remove_home_block(self, block_id: int):
         try:
@@ -76,4 +76,4 @@ class SiteService:
 
         except SQLAlchemyError as exc:
             self.repository.db.rollback()
-            raise DatabaseException("Не вдалося видалити блок головної сторінки") from exc
+            raise DatabaseException("Failed to delete home page block") from exc

@@ -47,7 +47,7 @@ class TestService:
         course = self.repository.get_course_by_slug(course_name)
 
         if not course:
-            raise NotFoundException("Тест для цього курсу не знайдено.")
+            raise NotFoundException("Test for this course was not found")
 
         questions = self.repository.get_questions_by_course_id(course.id)
 
@@ -89,7 +89,7 @@ class TestService:
             course = self.repository.get_course_by_slug(course_name)
 
             if not course:
-                raise NotFoundException("Курс не знайдено.")
+                raise NotFoundException("Course not found")
 
             self.repository.save_test_result(user_id, course.id, score, total)
             self.repository.db.commit()
@@ -100,7 +100,7 @@ class TestService:
 
         except SQLAlchemyError as exc:
             self.repository.db.rollback()
-            raise DatabaseException("Не вдалося зберегти результат тесту") from exc
+            raise DatabaseException("Failed to save test result") from exc
 
     def get_test_editor_data(self, course_name: str):
         return self.get_test_by_course_name(course_name)
@@ -116,10 +116,10 @@ class TestService:
         total_correct = is_a_correct + is_b_correct + is_c_correct + is_d_correct
 
         if total_correct == 0:
-            raise ValidationException("Потрібно вибрати хоча б одну правильну відповідь.")
+            raise ValidationException("At least one correct answer is required")
 
         if not allow_multiple and total_correct != 1:
-            raise ValidationException("Для одного вибору має бути тільки одна правильна відповідь.")
+            raise ValidationException("Single-choice question must have exactly one correct answer")
 
     def add_new_test_question(
         self,
@@ -140,7 +140,7 @@ class TestService:
             course = self.repository.get_course_by_slug(course_name)
 
             if not course:
-                raise NotFoundException("Курс не знайдено.")
+                raise NotFoundException("Course not found")
 
             self._validate_correct_answers(
                 allow_multiple,
@@ -173,7 +173,7 @@ class TestService:
 
         except SQLAlchemyError as exc:
             self.repository.db.rollback()
-            raise DatabaseException("Не вдалося додати питання") from exc
+            raise DatabaseException("Failed to add test question") from exc
 
     def save_test_question(
         self,
@@ -222,7 +222,7 @@ class TestService:
 
         except SQLAlchemyError as exc:
             self.repository.db.rollback()
-            raise DatabaseException("Не вдалося оновити питання") from exc
+            raise DatabaseException("Failed to update test question") from exc
 
     def remove_test_question(self, question_id: int):
         try:
@@ -232,4 +232,4 @@ class TestService:
 
         except SQLAlchemyError as exc:
             self.repository.db.rollback()
-            raise DatabaseException("Не вдалося видалити питання") from exc
+            raise DatabaseException("Failed to delete test question") from exc

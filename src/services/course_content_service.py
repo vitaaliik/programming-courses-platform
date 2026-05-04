@@ -17,7 +17,7 @@ class CourseContentService:
         course = self.repository.get_course_with_sections_by_slug(slug)
 
         if not course:
-            raise NotFoundException("Курс не знайдено.")
+            raise NotFoundException("Course not found")
 
         return course
 
@@ -31,7 +31,7 @@ class CourseContentService:
         course = self.repository.get_course_with_sections_by_slug(slug)
 
         if not course:
-            raise NotFoundException("Курс не знайдено.")
+            raise NotFoundException("Course not found")
 
         return course
 
@@ -40,7 +40,7 @@ class CourseContentService:
             course = self.repository.get_course_with_sections_by_slug(slug)
 
             if not course:
-                raise NotFoundException("Курс не знайдено.")
+                raise NotFoundException("Course not found")
 
             self.repository.update_course_main_info(
                 course_id=course["id"],
@@ -56,17 +56,17 @@ class CourseContentService:
 
         except SQLAlchemyError as exc:
             self.repository.db.rollback()
-            raise DatabaseException("Не вдалося оновити основну інформацію курсу") from exc
+            raise DatabaseException("Failed to update course main information") from exc
 
     def add_new_course_section(self, slug: str, title: str, content_html: str, sort_order: int):
         if not title.strip():
-            raise ValidationException("Назва секції не може бути порожньою.")
+            raise ValidationException("Section title cannot be empty")
 
         try:
             course = self.repository.get_course_with_sections_by_slug(slug)
 
             if not course:
-                raise NotFoundException("Курс не знайдено.")
+                raise NotFoundException("Course not found")
 
             self.repository.create_course_section(
                 course_id=course["id"],
@@ -83,11 +83,11 @@ class CourseContentService:
 
         except SQLAlchemyError as exc:
             self.repository.db.rollback()
-            raise DatabaseException("Не вдалося додати секцію курсу") from exc
+            raise DatabaseException("Failed to add course section") from exc
 
     def save_course_section(self, section_id: int, title: str, content_html: str, sort_order: int):
         if not title.strip():
-            raise ValidationException("Назва секції не може бути порожньою.")
+            raise ValidationException("Section title cannot be empty")
 
         try:
             self.repository.update_course_section(
@@ -101,7 +101,7 @@ class CourseContentService:
 
         except SQLAlchemyError as exc:
             self.repository.db.rollback()
-            raise DatabaseException("Не вдалося оновити секцію курсу") from exc
+            raise DatabaseException("Failed to update course section") from exc
 
     def remove_course_section(self, section_id: int):
         try:
@@ -111,7 +111,7 @@ class CourseContentService:
 
         except SQLAlchemyError as exc:
             self.repository.db.rollback()
-            raise DatabaseException("Не вдалося видалити секцію курсу") from exc
+            raise DatabaseException("Failed to delete course section") from exc
 
     def create_new_course(self, slug: str, title: str, description: str):
         slug = slug.strip().lower()
@@ -119,18 +119,18 @@ class CourseContentService:
         description = description.strip()
 
         if not slug or not title or not description:
-            raise ValidationException("Усі поля обов'язкові.")
+            raise ValidationException("All fields are required")
 
         try:
             existing = self.repository.get_course_by_slug(slug)
 
             if existing:
-                raise ValidationException("Курс із таким slug уже існує.")
+                raise ValidationException("Course with this slug already exists")
 
             self.repository.create_course(slug, title, description)
             self.repository.db.commit()
 
-            return {"ok": True, "message": "Новий курс успішно створено."}
+            return {"ok": True, "message": "The new course has been successfully created"}
 
         except AppException:
             self.repository.db.rollback()
@@ -138,19 +138,19 @@ class CourseContentService:
 
         except SQLAlchemyError as exc:
             self.repository.db.rollback()
-            raise DatabaseException("Не вдалося створити курс") from exc
+            raise DatabaseException("Failed to create course") from exc
 
     def remove_course(self, slug: str):
         try:
             course = self.repository.get_course_by_slug(slug)
 
             if not course:
-                raise NotFoundException("Курс не знайдено.")
+                raise NotFoundException("Course not found")
 
             self.repository.delete_course_by_id(course["id"])
             self.repository.db.commit()
 
-            return {"ok": True, "message": "Курс видалено."}
+            return {"ok": True, "message": "The course has been deleted"}
 
         except AppException:
             self.repository.db.rollback()
@@ -158,4 +158,4 @@ class CourseContentService:
 
         except SQLAlchemyError as exc:
             self.repository.db.rollback()
-            raise DatabaseException("Не вдалося видалити курс") from exc
+            raise DatabaseException("Failed to delete course") from exc
