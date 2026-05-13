@@ -1,13 +1,10 @@
-from fastapi import APIRouter, Form, Request
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
-from src.services.auth_service import (
-    forgot_password,
-    login_user,
-    register_user,
-    reset_password,
-    verify_reset_code,
-)
+from src.dependencies.course import get_auth_service
+from src.services.auth_service import AuthService
 from src.utils.page_renderer import render_page
 
 router = APIRouter()
@@ -17,6 +14,7 @@ router = APIRouter()
 async def auth_page(request: Request):
     if request.session.get("user_id"):
         return RedirectResponse(url="/profile", status_code=303)
+
     return render_page(request, "auth.html")
 
 
@@ -24,27 +22,36 @@ async def auth_page(request: Request):
 async def login_page(request: Request):
     if request.session.get("user_id"):
         return RedirectResponse(url="/profile", status_code=303)
+
     return render_page(request, "login.html")
 
 
 @router.post("/register")
 async def register(
     request: Request,
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
     username: str = Form(...),
     email: str = Form(...),
     password: str = Form(...),
     confirm_password: str = Form(...),
 ):
-    return register_user(request, username, email, password, confirm_password)
+    return auth_service.register_user(
+        request,
+        username,
+        email,
+        password,
+        confirm_password,
+    )
 
 
 @router.post("/login")
 async def login(
     request: Request,
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
     email: str = Form(...),
     password: str = Form(...),
 ):
-    return login_user(request, email, password)
+    return auth_service.login_user(request, email, password)
 
 
 @router.get("/forgot-password", response_class=HTMLResponse)
@@ -53,8 +60,11 @@ async def forgot_password_page(request: Request):
 
 
 @router.post("/forgot-password")
-async def forgot_password_post(email: str = Form(...)):
-    return forgot_password(email)
+async def forgot_password_post(
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
+    email: str = Form(...),
+):
+    return auth_service.forgot_password(email)
 
 
 @router.get("/verify-code", response_class=HTMLResponse)
@@ -64,10 +74,11 @@ async def verify_code_page(request: Request, email: str = ""):
 
 @router.post("/verify-code")
 async def verify_code_post(
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
     email: str = Form(...),
     code: str = Form(...),
 ):
-    return verify_reset_code(email, code)
+    return auth_service.verify_reset_code(email, code)
 
 
 @router.get("/reset-password", response_class=HTMLResponse)
@@ -77,12 +88,18 @@ async def reset_password_page(request: Request, email: str = "", code: str = "")
 
 @router.post("/reset-password")
 async def reset_password_post(
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
     email: str = Form(...),
     code: str = Form(...),
     new_password: str = Form(...),
     confirm_password: str = Form(...),
 ):
-    return reset_password(email, code, new_password, confirm_password)
+    return auth_service.reset_password(
+        email,
+        code,
+        new_password,
+        confirm_password,
+    )
 
 
 @router.get("/logout")

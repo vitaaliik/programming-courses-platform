@@ -1,90 +1,115 @@
-from src.core.database import get_db_connection
+from sqlalchemy.orm import Session
+
+from src.models.home_block import HomeBlock
+from src.models.site_content import SiteContent
 
 
-def get_site_content():
-    conn = get_db_connection()
-    cursor = conn.cursor()
+class SiteRepository:
+    def __init__(self, db: Session):
+        self.db = db
 
-    cursor.execute("SELECT * FROM site_content WHERE id = 1")
-    content = cursor.fetchone()
+    def _site_content_to_dict(self, content: SiteContent) -> dict:
+        return {
+            "id": content.id,
+            "hero_title": content.hero_title,
+            "hero_subtitle": content.hero_subtitle,
+            "about_title": content.about_title,
+            "about_text_1": content.about_text_1,
+            "about_text_2": content.about_text_2,
+            "audience_title": content.audience_title,
+            "audience_item_1": content.audience_item_1,
+            "audience_item_2": content.audience_item_2,
+            "audience_item_3": content.audience_item_3,
+            "audience_item_4": content.audience_item_4,
+            "features_title": content.features_title,
+            "features_item_1": content.features_item_1,
+            "features_item_2": content.features_item_2,
+            "features_item_3": content.features_item_3,
+            "features_item_4": content.features_item_4,
+            "features_item_5": content.features_item_5,
+            "college_title": content.college_title,
+            "college_text_1": content.college_text_1,
+            "college_text_2": content.college_text_2,
+            "creator_title": content.creator_title,
+            "creator_text": content.creator_text,
+            "skills_title": content.skills_title,
+            "skills_text_1": content.skills_text_1,
+            "skills_text_2": content.skills_text_2,
+            "importance_title": content.importance_title,
+            "importance_text_1": content.importance_text_1,
+            "importance_text_2": content.importance_text_2,
+        }
 
-    conn.close()
+    def _home_block_to_dict(self, block: HomeBlock) -> dict:
+        return {
+            "id": block.id,
+            "title": block.title,
+            "content_html": block.content_html,
+            "sort_order": block.sort_order,
+            "created_at": block.created_at,
+        }
 
-    return dict(content) if content else {}
+    def get_site_content(self) -> dict:
+        content = self.db.query(SiteContent).filter(SiteContent.id == 1).first()
 
+        if not content:
+            return {}
 
-def update_site_hero(hero_title: str, hero_subtitle: str):
-    conn = get_db_connection()
-    cursor = conn.cursor()
+        return self._site_content_to_dict(content)
 
-    cursor.execute(
-        """
-        UPDATE site_content
-        SET hero_title = ?, hero_subtitle = ?
-        WHERE id = 1
-        """,
-        (hero_title, hero_subtitle),
-    )
+    def update_site_hero(self, hero_title: str, hero_subtitle: str) -> None:
+        content = self.db.query(SiteContent).filter(SiteContent.id == 1).first()
 
-    conn.commit()
-    conn.close()
+        if not content:
+            return
 
+        content.hero_title = hero_title
+        content.hero_subtitle = hero_subtitle
 
-def get_home_blocks():
-    conn = get_db_connection()
-    cursor = conn.cursor()
+        self.db.flush()
 
-    cursor.execute(
-        """
-        SELECT id, title, content_html, sort_order
-        FROM home_blocks
-        ORDER BY sort_order ASC, id ASC
-        """
-    )
-    rows = cursor.fetchall()
+    def get_home_blocks(self) -> list[dict]:
+        blocks = (
+            self.db.query(HomeBlock)
+            .order_by(HomeBlock.sort_order.asc(), HomeBlock.id.asc())
+            .all()
+        )
 
-    conn.close()
-    return [dict(row) for row in rows]
+        return [self._home_block_to_dict(block) for block in blocks]
 
+    def create_home_block(
+        self,
+        title: str,
+        content_html: str,
+        sort_order: int,
+    ) -> None:
+        block = HomeBlock(
+            title=title,
+            content_html=content_html,
+            sort_order=sort_order,
+        )
 
-def create_home_block(title: str, content_html: str, sort_order: int):
-    conn = get_db_connection()
-    cursor = conn.cursor()
+        self.db.add(block)
+        self.db.flush()
 
-    cursor.execute(
-        """
-        INSERT INTO home_blocks (title, content_html, sort_order)
-        VALUES (?, ?, ?)
-        """,
-        (title, content_html, sort_order),
-    )
+    def update_home_block(
+        self,
+        block_id: int,
+        title: str,
+        content_html: str,
+        sort_order: int,
+    ) -> None:
+        block = self.db.query(HomeBlock).filter(HomeBlock.id == block_id).first()
 
-    conn.commit()
-    conn.close()
+        if not block:
+            return
 
+        block.title = title
+        block.content_html = content_html
+        block.sort_order = sort_order
 
-def update_home_block(block_id: int, title: str, content_html: str, sort_order: int):
-    conn = get_db_connection()
-    cursor = conn.cursor()
+        self.db.flush()
 
-    cursor.execute(
-        """
-        UPDATE home_blocks
-        SET title = ?, content_html = ?, sort_order = ?
-        WHERE id = ?
-        """,
-        (title, content_html, sort_order, block_id),
-    )
-
-    conn.commit()
-    conn.close()
-
-
-def delete_home_block(block_id: int):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("DELETE FROM home_blocks WHERE id = ?", (block_id,))
-
-    conn.commit()
-    conn.close()
+    def delete_home_block(self, block_id: int) -> None:
+        self.db.query(HomeBlock).filter(HomeBlock.id == block_id).delete()
+        self.db.flush()

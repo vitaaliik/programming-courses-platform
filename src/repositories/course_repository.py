@@ -1,42 +1,14 @@
-from src.core.database import get_db_connection
+from sqlalchemy.orm import Session
+
+from src.models.course import Course
 
 
-def get_course_by_slug(slug: str):
-    conn = get_db_connection()
-    cursor = conn.cursor()
+class CourseRepository:
+    def __init__(self, db: Session):
+        self.db = db
 
-    cursor.execute(
-        """
-        SELECT id, slug, title, description, content_file, page_title, page_subtitle
-        FROM courses
-        WHERE slug = ?
-        """,
-        (slug,),
-    )
-    row = cursor.fetchone()
-    conn.close()
+    def get_all(self) -> list[Course]:
+        return self.db.query(Course).order_by(Course.title.asc()).all()
 
-    return dict(row) if row else None
-
-
-def create_course(slug: str, title: str, description: str):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute(
-        """
-        INSERT INTO courses (slug, title, description, content_file, page_title, page_subtitle)
-        VALUES (?, ?, ?, ?, ?, ?)
-        """,
-        (
-            slug,
-            title,
-            description,
-            f"{slug}.html",
-            f"Курс: {title}",
-            description,
-        ),
-    )
-
-    conn.commit()
-    conn.close()
+    def get_by_slug(self, slug: str) -> Course | None:
+        return self.db.query(Course).filter(Course.slug == slug).first()

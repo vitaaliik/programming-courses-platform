@@ -1,149 +1,191 @@
 import random
 from datetime import datetime, timedelta
 
-from fastapi.responses import JSONResponse
+from sqlalchemy.exc import SQLAlchemyError
 
+from src.core.exceptions import DatabaseException, NotFoundException, ValidationException
 from src.core.security import hash_password, verify_password
-from src.repositories.user_repository import (
-    create_password_reset,
-    create_user,
-    delete_password_resets,
-    get_password_reset,
-    get_user_by_email,
-    update_user_password,
-)
+from src.repositories.user_repository import UserRepository
 from src.utils.email_sender import send_reset_email
 
 
-def generate_reset_code() -> str:
-    return str(random.randint(100000, 999999))
+class AuthService:
+    def __init__(self, repository: UserRepository):
+        self.repository = repository
 
+    def generate_reset_code(self) -> str:
+        return str(random.randint(100000, 999999))
 
-def register_user(request, username: str, email: str, password: str, confirm_password: str):
-    username = username.strip()
-    email = email.strip().lower()
+    def register_user(
+        self,
+        request,
+        username: str,
+        email: str,
+        password: str,
+        confirm_password: str,
+    ) -> dict:
+        username = username.strip()
+        email = email.strip().lower()
 
-    if not username or not email or not password or not confirm_password:
-        return JSONResponse({"ok": False, "message": "Усі поля обов'язкові для заповнення."})
+        if not username or not email or not password or not confirm_password:
+            raise ValidationException("All fields are required")
 
-    if password != confirm_password:
-        return JSONResponse({"ok": False, "message": "Паролі не співпадають."})
+        if password != confirm_password:
+            raise ValidationException("Passwords do not match")
 
-    if len(password) < 6:
-        return JSONResponse({"ok": False, "message": "Пароль не може бути меншим за 6 символів."})
+        if len(password) < 6:
+            raise ValidationException("Password must be at least 6 characters")
 
-    if len(password) > 72:
-        return JSONResponse({"ok": False, "message": "Пароль занадто довгий (максимум 72 символи)."})
+        if len(password) > 72:
+            raise ValidationException("Password is too long. Maximum length is 72 characters")
 
-    existing_user = get_user_by_email(email)
-    if existing_user:
-        return JSONResponse({"ok": False, "message": "Така пошта вже зареєстрована."})
+        try:
+            existing_user = self.repository.get_user_by_email(email)
 
-    password_hash = hash_password(password)
-    user_id = create_user(username, email, password_hash, "user")
+            if existing_user:
+                raise ValidationException("This email address is already registered")
 
-    request.session["user_id"] = user_id
-    request.session["username"] = username
-    request.session["role"] = "user"
+            password_hash = hash_password(password)
+            user_id = self.repository.create_user(username, email, password_hash, "user")
 
-    return JSONResponse({"ok": True, "redirect": "/profile"})
+            self.repository.db.commit()
 
+            request.session["user_id"] = user_id
+            request.session["username"] = username
+            request.session["role"] = "user"
 
-def login_user(request, email: str, password: str):
-    email = email.strip().lower()
+            return {"ok": True, "redirect": "/profile"}
 
-    if not email or not password:
-        return JSONResponse({"ok": False, "message": "Введіть пошту і пароль."})
+        except ValidationException:
+            self.repository.db.rollback()
+            raise
 
-    user = get_user_by_email(email)
+        except SQLAlchemyError as exc:
+            self.repository.db.rollback()
+            raise DatabaseException("Failed to register user") from exc
 
-    if not user:
-        return JSONResponse({"ok": False, "message": "Користувача з такою поштою не знайдено."})
+    def login_user(self, request, email: str, password: str) -> dict:
+        email = email.strip().lower()
 
-    if not verify_password(password, user["password_hash"]):
-        return JSONResponse({"ok": False, "message": "Неправильний пароль."})
+        if not email or not password:
+            raise ValidationException("Email and password are required")
 
-    request.session["user_id"] = user["id"]
-    request.session["username"] = user["username"]
-    request.session["role"] = user["role"]
+        user = self.repository.get_user_by_email(email)
 
-    if user["role"] == "admin":
-        return JSONResponse({"ok": True, "redirect": "/admin"})
+        if not user:
+            raise NotFoundException("User with this email address was not found")
 
-    return JSONResponse({"ok": True, "redirect": "/profile"})
+        if not verify_password(password, user.password_hash):
+            raise ValidationException("Incorrect password")
 
+        request.session["user_id"] = user.id
+        request.session["username"] = user.username
+        request.session["role"] = user.role
 
-def forgot_password(email: str):
-    email = email.strip().lower()
+        if user.role == "admin":
+            return {"ok": True, "redirect": "/admin"}
 
-    if not email:
-        return JSONResponse({"ok": False, "message": "Введіть пошту."})
+        return {"ok": True, "redirect": "/profile"}
 
-    user = get_user_by_email(email)
+    def forgot_password(self, email: str) -> dict:
+        email = email.strip().lower()
 
-    if not user:
-        return JSONResponse({"ok": False, "message": "Користувача з такою поштою не знайдено."})
+        if not email:
+            raise ValidationException("Email is required")
 
-    code = generate_reset_code()
-    expires_at = (datetime.now() + timedelta(minutes=10)).isoformat()
+        user = self.repository.get_user_by_email(email)
 
-    create_password_reset(email, code, expires_at)
+        if not user:
+            raise NotFoundException("User with this email address was not found")
 
-    try:
-        send_reset_email(email, code)
-    except Exception as e:
-        return JSONResponse({"ok": False, "message": f"Не вдалося надіслати лист: {str(e)}"})
+        code = self.generate_reset_code()
+        expires_at = (datetime.now() + timedelta(minutes=10)).isoformat()
 
-    return JSONResponse({"ok": True, "redirect": f"/verify-code?email={email}"})
+        try:
+            self.repository.create_password_reset(email, code, expires_at)
+            self.repository.db.commit()
 
+        except SQLAlchemyError as exc:
+            self.repository.db.rollback()
+            raise DatabaseException("Failed to create password reset code") from exc
 
-def verify_reset_code(email: str, code: str):
-    email = email.strip().lower()
-    code = code.strip()
+        try:
+            send_reset_email(email, code)
+        except Exception as exc:
+            raise DatabaseException("Failed to send password reset email") from exc
 
-    if not email or not code:
-        return JSONResponse({"ok": False, "message": "Заповніть усі поля."})
+        return {"ok": True, "redirect": f"/verify-code?email={email}"}
 
-    reset_row = get_password_reset(email, code)
+    def verify_reset_code(self, email: str, code: str) -> dict:
+        email = email.strip().lower()
+        code = code.strip()
 
-    if not reset_row:
-        return JSONResponse({"ok": False, "message": "Неправильний код."})
+        if not email or not code:
+            raise ValidationException("Email and reset code are required")
 
-    expires_at = datetime.fromisoformat(reset_row["expires_at"])
-    if datetime.now() > expires_at:
-        return JSONResponse({"ok": False, "message": "Час дії коду минув."})
+        reset_row = self.repository.get_password_reset(email, code)
 
-    return JSONResponse({"ok": True, "redirect": f"/reset-password?email={email}&code={code}"})
+        if not reset_row:
+            raise ValidationException("Incorrect reset code")
 
+        expires_at = datetime.fromisoformat(reset_row.expires_at)
 
-def reset_password(email: str, code: str, new_password: str, confirm_password: str):
-    email = email.strip().lower()
-    code = code.strip()
+        if datetime.now() > expires_at:
+            raise ValidationException("Reset code has expired")
 
-    if not email or not code or not new_password or not confirm_password:
-        return JSONResponse({"ok": False, "message": "Усі поля обов'язкові."})
+        return {"ok": True, "redirect": f"/reset-password?email={email}&code={code}"}
 
-    if new_password != confirm_password:
-        return JSONResponse({"ok": False, "message": "Паролі не співпадають."})
+    def reset_password(
+        self,
+        email: str,
+        code: str,
+        new_password: str,
+        confirm_password: str,
+    ) -> dict:
+        email = email.strip().lower()
+        code = code.strip()
 
-    if len(new_password) < 6:
-        return JSONResponse({"ok": False, "message": "Пароль не може бути меншим за 6 символів."})
+        if not email or not code or not new_password or not confirm_password:
+            raise ValidationException("All fields are required")
 
-    if len(new_password) > 72:
-        return JSONResponse({"ok": False, "message": "Пароль занадто довгий (максимум 72 символи)."})
+        if new_password != confirm_password:
+            raise ValidationException("Passwords do not match")
 
-    reset_row = get_password_reset(email, code)
+        if len(new_password) < 6:
+            raise ValidationException("Password must be at least 6 characters")
 
-    if not reset_row:
-        return JSONResponse({"ok": False, "message": "Неправильний код."})
+        if len(new_password) > 72:
+            raise ValidationException("Password is too long. Maximum length is 72 characters")
 
-    expires_at = datetime.fromisoformat(reset_row["expires_at"])
-    if datetime.now() > expires_at:
-        return JSONResponse({"ok": False, "message": "Час дії коду минув."})
+        reset_row = self.repository.get_password_reset(email, code)
 
-    password_hash = hash_password(new_password)
+        if not reset_row:
+            raise ValidationException("Incorrect reset code")
 
-    update_user_password(email, password_hash)
-    delete_password_resets(email)
+        expires_at = datetime.fromisoformat(reset_row.expires_at)
 
-    return JSONResponse({"ok": True, "redirect": "/login"})
+        if datetime.now() > expires_at:
+            raise ValidationException("Reset code has expired")
+
+        try:
+            password_hash = hash_password(new_password)
+
+            self.repository.update_user_password(email, password_hash)
+            self.repository.delete_password_resets(email)
+            self.repository.db.commit()
+
+            return {"ok": True, "redirect": "/login"}
+
+        except SQLAlchemyError as exc:
+            self.repository.db.rollback()
+            raise DatabaseException("Failed to reset password") from exc
+
+    def make_user_admin_by_email(self, email: str) -> bool:
+        try:
+            self.repository.make_user_admin_by_email(email)
+            self.repository.db.commit()
+            return True
+
+        except SQLAlchemyError as exc:
+            self.repository.db.rollback()
+            raise DatabaseException("Failed to update user role") from exc

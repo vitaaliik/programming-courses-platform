@@ -1,66 +1,80 @@
-from src.core.database import get_db_connection
+from sqlalchemy.exc import SQLAlchemyError
+
+from src.core.exceptions import DatabaseException, NotFoundException, ValidationException
+from src.repositories.profile_repository import ProfileRepository
 
 
-def get_profile_data(user_id: int):
-    conn = get_db_connection()
-    cursor = conn.cursor()
+class ProfileService:
+    def __init__(self, repository: ProfileRepository):
+        self.repository = repository
 
-    cursor.execute(
-        """
-        SELECT username, email, created_at
-        FROM users
-        WHERE id = ?
-        """,
-        (user_id,),
-    )
-    user = cursor.fetchone()
+    def get_profile_data(self, user_id: int):
+        user = self.repository.get_user(user_id)
 
-    if not user:
-        conn.close()
-        return None
+        if not user:
+            raise NotFoundException("User not found")
 
-    user = dict(user)
+        results = self.repository.get_user_results(user_id)
+        total_tests = len(results)
 
-    cursor.execute(
-        """
-        SELECT test_results.score, test_results.total, test_results.passed_at, courses.title, courses.slug
-        FROM test_results
-        JOIN courses ON test_results.course_id = courses.id
-        WHERE test_results.user_id = ?
-        ORDER BY test_results.passed_at DESC
-        """,
-        (user_id,),
-    )
-    results = cursor.fetchall()
-    results = [dict(r) for r in results]
+        if total_tests > 0:
+            avg_score = sum((r["score"] / r["total"]) * 100 for r in results) / total_tests
+            best_score = max((r["score"] / r["total"]) * 100 for r in results)
+        else:
+            avg_score = 0
+            best_score = 0
 
-    total_tests = len(results)
+        total_courses = self.repository.get_total_courses()
+        completed_courses = len(set(r["title"] for r in results))
 
-    if total_tests > 0:
-        avg_score = sum((r["score"] / r["total"]) * 100 for r in results) / total_tests
-        best_score = max((r["score"] / r["total"]) * 100 for r in results)
-    else:
-        avg_score = 0
-        best_score = 0
+        progress_percent = (
+            round((completed_courses / total_courses) * 100, 1)
+            if total_courses > 0
+            else 0
+        )
 
-    cursor.execute("SELECT COUNT(*) as total FROM courses")
-    total_courses = cursor.fetchone()["total"]
+        return {
+            "profile_user": {
+                "username": user.username,
+                "email": user.email,
+                "created_at": user.created_at,
+            },
+            "results": results,
+            "recent_results": results[:4],
+            "total_tests": total_tests,
+            "avg_score": round(avg_score, 1),
+            "best_score": round(best_score, 1),
+            "completed_courses": completed_courses,
+            "total_courses": total_courses,
+            "progress_percent": progress_percent,
+        }
 
-    completed_courses = len(set(r["title"] for r in results))
-    progress_percent = round((completed_courses / total_courses) * 100, 1) if total_courses > 0 else 0
+    def update_username(self, user_id: int, new_username: str):
+        new_username = new_username.strip()
 
-    recent_results = results[:4]
+        if not new_username:
+            raise ValidationException("Username cannot be empty")
 
-    conn.close()
+        if len(new_username) < 2:
+            raise ValidationException("Username must contain at least 2 characters")
 
-    return {
-        "profile_user": user,
-        "results": results,
-        "recent_results": recent_results,
-        "total_tests": total_tests,
-        "avg_score": round(avg_score, 1),
-        "best_score": round(best_score, 1),
-        "completed_courses": completed_courses,
-        "total_courses": total_courses,
-        "progress_percent": progress_percent,
-    }
+        if len(new_username) > 30:
+            raise ValidationException("Username is too long. Maximum length is 30 characters")
+
+        try:
+            user = self.repository.get_user(user_id)
+
+            if not user:
+                raise NotFoundException("User not found")
+
+            self.repository.update_username(user_id, new_username)
+            self.repository.db.commit()
+            return True
+
+        except (NotFoundException, ValidationException):
+            self.repository.db.rollback()
+            raise
+
+        except SQLAlchemyError as exc:
+            self.repository.db.rollback()
+            raise DatabaseException("Failed to update username") from exc
