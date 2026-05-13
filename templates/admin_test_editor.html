@@ -31,6 +31,7 @@
             </div>
 
             {% for q in questions %}
+            <div class="test-question-card">
             <form class="test-question-form admin-form-grid" data-question-id="{{ q['db_id'] }}">
                 <div class="admin-form-group">
                     <label>Порядок</label>
@@ -86,14 +87,19 @@
                 </div>
 
                 <div class="admin-form-group admin-form-group-full">
-                    <p class="form-message" style="display:none;"></p>
-                    <button type="submit" class="admin-save-btn">Зберегти питання</button>
-                    <button type="button" class="auth-btn delete-question-btn" data-question-id="{{ q['db_id'] }}" style="margin-left:10px;">
-                        Видалити питання
-                    </button>
-                </div>
+    <p class="form-message" style="display:none;"></p>
+
+    <div class="admin-action-row">
+        <button type="submit" class="admin-save-btn">
+            Зберегти питання
+        </button>
+        <button type="button" class="btn-danger delete-question-btn" data-question-id="{{ q['db_id'] }}">
+            Видалити питання
+        </button>
+    </div>
+</div>
             </form>
-            <hr style="margin: 30px 0; border: 1px solid #2a2a2a;">
+            </div>
             {% endfor %}
         </section>
 
@@ -102,6 +108,7 @@
                 <h3>Додати нове питання</h3>
             </div>
 
+            <div class="add-question-card">
             <form id="add-question-form" class="admin-form-grid">
                 <div class="admin-form-group">
                     <label>Порядок</label>
