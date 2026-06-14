@@ -186,26 +186,30 @@
             return formData;
         }
 
-        document.querySelectorAll(".test-question-form").forEach(form => {
-            form.addEventListener("submit", async function(e) {
-                e.preventDefault();
+        document.querySelectorAll(".delete-question-btn").forEach(button => {
+    button.addEventListener("click", async function() {
 
-                const questionId = form.dataset.questionId;
-                const message = form.querySelector(".form-message");
-                const formData = normalizeFormData(form);
+        const confirmed = confirm("Ви точно хочете видалити це питання?");
 
-                const response = await fetch(`/admin/tests/question/${questionId}/update`, {
-                    method: "POST",
-                    body: formData
-                });
+        if (!confirmed) {
+            return;
+        }
 
-                const data = await response.json();
+        const questionId = button.dataset.questionId;
 
-                message.style.display = "block";
-                message.className = data.ok ? "form-message success-message" : "form-message error-message";
-                message.textContent = data.message;
-            });
+        const response = await fetch(`/admin/tests/question/${questionId}/delete`, {
+            method: "POST"
         });
+
+        const data = await response.json();
+
+        if (data.ok) {
+            location.reload();
+        } else {
+            alert(data.message);
+        }
+    });
+});
 
         document.querySelectorAll(".delete-question-btn").forEach(button => {
             button.addEventListener("click", async function() {

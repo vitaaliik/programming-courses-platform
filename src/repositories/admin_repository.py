@@ -7,6 +7,8 @@ from src.models.user import User
 
 from src.schemas.admin import AdminUserStatisticsDTO, RecentTestResultDTO
 
+from src.utils.timezone import to_kyiv_time
+
 class AdminRepository:
     def __init__(self, db: Session):
         self.db = db
@@ -48,40 +50,62 @@ class AdminRepository:
                username=row.username,
                email=row.email,
                role=row.role,
-               created_at=row.created_at,
+               created_at=to_kyiv_time(row.created_at),
                tests_passed=row.tests_passed,
                avg_result=row.avg_result,
                completed_courses=row.completed_courses,
-               last_activity=row.last_activity,
+               last_activity=to_kyiv_time(row.last_activity),
             )
             for row in rows
         ]
 
-    def get_recent_results(self) -> list[RecentTestResultDTO]:
-        rows = (
-            self.db.query(
-               User.username,
-               User.email,
-               Course.title.label("course_title"),
-               TestResult.score,
-               TestResult.total,
-               TestResult.passed_at,
-            )
-            .join(User, TestResult.user_id == User.id)
-            .join(Course, TestResult.course_id == Course.id)
-            .order_by(desc(TestResult.passed_at))
-            .limit(12)
-            .all()
+    def get_recent_results(
+      self,
+      email_search: str = "",
+      course_filter: str = "",
+    ) -> list[RecentTestResultDTO]:
+
+      query = (
+          self.db.query(
+             User.username,
+             User.email,
+             Course.title.label("course_title"),
+             TestResult.score,
+             TestResult.total,
+             TestResult.passed_at,
+           )
+           .join(User, TestResult.user_id == User.id)
+           .join(Course, TestResult.course_id == Course.id)
         )
 
-        return [
-            RecentTestResultDTO(
-               username=row.username,
-               email=row.email,
-               course_title=row.course_title,
-               score=row.score,
-               total=row.total,
-               passed_at=row.passed_at,
-            )
-            for row in rows
-        ]
+      if email_search:
+        query = query.filter(User.email.ilike(f"%{email_search}%"))
+
+      if course_filter:
+        query = query.filter(Course.slug == course_filter)
+
+      rows = (
+        query
+        .order_by(desc(TestResult.passed_at))
+        .all()
+    )
+
+      return [
+        RecentTestResultDTO(
+            username=row.username,
+            email=row.email,
+            course_title=row.course_title,
+            score=row.score,
+            total=row.total,
+            passed_at=to_kyiv_time(row.passed_at),
+        )
+        for row in rows
+    ]
+
+
+    def get_all_courses_for_filter(self):
+      return (
+        self.db.query(Course)
+        .order_by(Course.title.asc())
+        .all()
+    )

@@ -115,11 +115,24 @@
 
         <section class="admin-section">
             <div class="admin-section-header">
-                <h3>Користувачі</h3>
+                <div class="admin-collapse-header">
+    <h3>Користувачі</h3>
+
+    <button
+        type="button"
+        class="admin-collapse-btn"
+        onclick="toggleUsersTable()"
+    >
+        Згорнути
+    </button>
+</div>
                 <p>Список усіх зареєстрованих користувачів і їх статистика</p>
             </div>
 
-            <div class="admin-table-wrapper">
+            <div
+    class="admin-table-wrapper"
+    id="users-table-wrapper"
+>
                 <table class="admin-table">
                     <thead>
                         <tr>
@@ -141,7 +154,10 @@
                             <td>{{ u["tests_passed"] }}</td>
                             <td>{{ u["avg_result"] }}%</td>
                             <td>{{ u["completed_courses"] }}/{{ total_courses }}</td>
-                            <td>{{ u["last_activity"] if u["last_activity"] else "Немає" }}</td>
+                            <td>
+                                {{ u["last_activity"].strftime('%d.%m.%Y %H:%M')
+                                if u["last_activity"] else "Немає" }}
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -154,7 +170,35 @@
                 <h3>Останні результати тестів</h3>
                 <p>Остання активність на платформі</p>
             </div>
+<form method="GET" class="admin-filter-form">
 
+    <input
+        type="text"
+        name="email_search"
+        placeholder="Пошук по пошті..."
+        value="{{ request.query_params.get('email_search', '') }}"
+    >
+
+    <select name="course_filter">
+        <option value="">Всі курси</option>
+
+        {% for c in courses_filter %}
+        <option
+            value="{{ c.slug }}"
+            {% if request.query_params.get('course_filter') == c.slug %}
+                selected
+            {% endif %}
+        >
+            {{ c.title }}
+        </option>
+        {% endfor %}
+    </select>
+
+    <button type="submit" class="admin-save-btn">
+        Знайти
+    </button>
+
+</form>
             {% if recent_results %}
                 <div class="admin-results-grid">
                     {% for r in recent_results %}
@@ -163,7 +207,7 @@
                         <p><strong>Пошта:</strong> {{ r["email"] }}</p>
                         <p><strong>Курс:</strong> {{ r["course_title"] }}</p>
                         <p><strong>Результат:</strong> {{ r["score"] }}/{{ r["total"] }}</p>
-                        <p><strong>Дата:</strong> {{ r["passed_at"] }}</p>
+                        <p><strong>Дата:</strong> {{ r["passed_at"].strftime('%d.%m.%Y %H:%M') if r["passed_at"] else "Немає" }}</p>
                     </div>
                     {% endfor %}
                 </div>
@@ -204,7 +248,7 @@
 
         document.querySelectorAll(".delete-course-btn").forEach(button => {
             button.addEventListener("click", async function() {
-                const slug = button.dataset.courseSlug;
+                const slug = button.dataset.slug;
 
                 const confirmed = confirm(`Точно видалити курс "${slug}"?`);
                 if (!confirmed) return;
@@ -223,5 +267,45 @@
             });
         });
     </script>
+    <script>
+function toggleUsersTable() {
+
+    const table = document.getElementById(
+        "users-table-wrapper"
+    );
+
+    if (table.style.display === "none") {
+        table.style.display = "block";
+    } else {
+        table.style.display = "none";
+    }
+}
+</script>
+<script>
+
+window.addEventListener("beforeunload", () => {
+    localStorage.setItem(
+        "adminScrollPosition",
+        window.scrollY
+    );
+});
+
+window.addEventListener("load", () => {
+
+    const scrollPosition = localStorage.getItem(
+        "adminScrollPosition"
+    );
+
+    if (scrollPosition !== null) {
+
+        window.scrollTo({
+            top: parseInt(scrollPosition),
+            behavior: "instant"
+        });
+
+    }
+});
+
+</script>
 </body>
 </html>

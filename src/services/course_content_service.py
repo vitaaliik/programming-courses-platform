@@ -1,3 +1,6 @@
+import os
+import re
+
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.core.exceptions import (
@@ -12,6 +15,34 @@ from src.repositories.course_content_repository import CourseContentRepository
 class CourseContentService:
     def __init__(self, repository: CourseContentRepository):
         self.repository = repository
+
+    def _cleanup_unused_uploads(self) -> None:
+        upload_dir = os.path.join("static", "uploads")
+
+        if not os.path.isdir(upload_dir):
+            return
+
+        used_files = set()
+        courses = self.repository.get_all_courses()
+
+        for course in courses:
+            course_data = self.repository.get_course_with_sections_by_slug(course["slug"])
+
+            if not course_data:
+                continue
+
+            for section in course_data["sections"]:
+                html = section.get("content_html") or ""
+                matches = re.findall(r'/static/uploads/([^"\']+)', html)
+
+                for file_name in matches:
+                    used_files.add(file_name)
+
+        for file_name in os.listdir(upload_dir):
+            file_path = os.path.join(upload_dir, file_name)
+
+            if os.path.isfile(file_path) and file_name not in used_files:
+                os.remove(file_path)
 
     def get_course_page_data(self, slug: str):
         course = self.repository.get_course_with_sections_by_slug(slug)
@@ -47,6 +78,7 @@ class CourseContentService:
                 page_title=page_title.strip(),
                 page_subtitle=page_subtitle.strip(),
             )
+
             self.repository.db.commit()
             return True
 
@@ -74,7 +106,10 @@ class CourseContentService:
                 content_html=content_html.strip(),
                 sort_order=sort_order,
             )
+
             self.repository.db.commit()
+            self._cleanup_unused_uploads()
+
             return True
 
         except AppException:
@@ -96,7 +131,10 @@ class CourseContentService:
                 content_html=content_html.strip(),
                 sort_order=sort_order,
             )
+
             self.repository.db.commit()
+            self._cleanup_unused_uploads()
+
             return True
 
         except SQLAlchemyError as exc:
@@ -106,7 +144,10 @@ class CourseContentService:
     def remove_course_section(self, section_id: int):
         try:
             self.repository.delete_course_section(section_id)
+
             self.repository.db.commit()
+            self._cleanup_unused_uploads()
+
             return True
 
         except SQLAlchemyError as exc:
@@ -148,7 +189,9 @@ class CourseContentService:
                 raise NotFoundException("Course not found")
 
             self.repository.delete_course_by_id(course["id"])
+
             self.repository.db.commit()
+            self._cleanup_unused_uploads()
 
             return {"ok": True, "message": "The course has been deleted"}
 

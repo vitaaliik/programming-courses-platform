@@ -116,7 +116,7 @@
                         <div class="profile-result-body">
                             <p><strong>Результат:</strong> {{ r["score"] }}/{{ r["total"] }}</p>
                             <p><strong>Дата:</strong> {{ r["passed_at"] }}</p>
-                            <a href="/{{ r['slug'] }}" class="profile-open-course">Відкрити курс</a>
+                            <a href="/course/{{ r['slug'] }}" class="profile-open-course">Відкрити курс</a>
                         </div>
                     </div>
                     {% endfor %}

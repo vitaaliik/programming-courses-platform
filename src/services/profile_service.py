@@ -2,7 +2,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from src.core.exceptions import DatabaseException, NotFoundException, ValidationException
 from src.repositories.profile_repository import ProfileRepository
-
+from src.utils.timezone import to_kyiv_time
 
 class ProfileService:
     def __init__(self, repository: ProfileRepository):
@@ -33,11 +33,16 @@ class ProfileService:
             else 0
         )
 
+        for result in results:
+            result["passed_at"] = to_kyiv_time(
+               result["passed_at"]
+            ).strftime("%Y-%m-%d %H:%M:%S")
+
         return {
             "profile_user": {
                 "username": user.username,
                 "email": user.email,
-                "created_at": user.created_at,
+                "created_at": to_kyiv_time(user.created_at).strftime("%Y-%m-%d %H:%M:%S"),
             },
             "results": results,
             "recent_results": results[:4],

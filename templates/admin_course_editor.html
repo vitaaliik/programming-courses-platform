@@ -4,12 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Редактор курсу</title>
-    <link rel="stylesheet" href="/static/style.css?v=32">
+    <link rel="stylesheet" href="/static/style.css?v=180">
 
-    <!-- Quill -->
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-
-    
+    <script src="https://cdn.jsdelivr.net/npm/tinymce@6/tinymce.min.js"></script>
 </head>
 <body>
     <header class="navbar">
@@ -68,41 +65,38 @@
 
                     <div class="admin-form-group admin-form-group-full">
                         <label>Заголовок секції</label>
-                        <input type="text" name="title" value="{{ section['title'] }}" required>
+                        <div class="title-with-emoji">
+                            <input type="text" name="title" value="{{ section['title'] }}" required>
+                            <button type="button" class="emoji-title-btn">&#128522;</button>
+                        </div>
                     </div>
 
                     <div class="admin-form-group admin-form-group-full">
                         <label>Контент секції</label>
 
-                        <div
-                            class="quill-editor existing-editor"
+                        <textarea
+                            class="rich-editor"
                             id="editor-{{ section['id'] }}"
-                            data-hidden-input="content-html-{{ section['id'] }}"
-                        >{{ section["content_html"] | safe }}</div>
-
-                        <input
-                            type="hidden"
-                            id="content-html-{{ section['id'] }}"
                             name="content_html"
-                        >
+                        >{{ section["content_html"] | safe }}</textarea>
 
                         <div class="editor-help">
-                            Можна форматувати текст як у Word: заголовки, жирний, списки, цитати, код.
+                            Для прикладів HTML, JavaScript або PHP використовуй кнопку “Вставити код”, щоб код не виконувався як HTML.
                         </div>
                     </div>
 
                     <div class="admin-form-group admin-form-group-full">
-    <p class="form-message" style="display:none;"></p>
+                        <p class="form-message" style="display:none;"></p>
 
-    <div class="admin-action-row">
-        <button type="submit" class="admin-save-btn">
-            Зберегти секцію
-        </button>
-        <button type="button" class="btn-danger delete-section-btn" data-section-id="{{ section['id'] }}">
-            Видалити секцію
-        </button>
-    </div>
-</div>
+                        <div class="admin-action-row">
+                            <button type="submit" class="admin-save-btn">
+                                Зберегти секцію
+                            </button>
+                            <button type="button" class="btn-danger delete-section-btn" data-section-id="{{ section['id'] }}">
+                                Видалити секцію
+                            </button>
+                        </div>
+                    </div>
                 </form>
             </div>
             {% endfor %}
@@ -121,26 +115,23 @@
 
                 <div class="admin-form-group admin-form-group-full">
                     <label for="new_title">Заголовок секції</label>
-                    <input type="text" id="new_title" name="title" required>
+                    <div class="title-with-emoji">
+                        <input type="text" id="new_title" name="title" required>
+                        <button type="button" class="emoji-title-btn">&#128522;</button>
+                    </div>
                 </div>
 
                 <div class="admin-form-group admin-form-group-full">
                     <label>Контент секції</label>
 
-                    <div
-                        class="quill-editor"
+                    <textarea
+                        class="rich-editor"
                         id="new-section-editor"
-                        data-hidden-input="new-content-html"
-                    ></div>
-
-                    <input
-                        type="hidden"
-                        id="new-content-html"
                         name="content_html"
-                    >
+                    ></textarea>
 
                     <div class="editor-help">
-                        Напиши текст і відформатуй його кнопками зверху.
+                        Для прикладів коду використовуй кнопку “Вставити код”.
                     </div>
                 </div>
 
@@ -152,130 +143,434 @@
         </section>
     </main>
 
-    <!-- Quill -->
-    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<script>
+    const slug = "{{ course['slug'] }}";
 
-    <script>
-        const slug = "{{ course['slug'] }}";
+    function escapeHtml(code) {
+        return code
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
 
-        const quillOptions = {
-            theme: "snow",
-            modules: {
-                toolbar: [
-                    [{ header: [2, 3, 4, false] }],
-                    ["bold", "italic", "underline", "strike"],
-                    [{ list: "ordered" }, { list: "bullet" }],
-                    ["blockquote"],
-                    ["code-block"],
-                    [{ align: [] }],
-                    ["link", "clean"]
-                ]
+    tinymce.init({
+        selector: ".rich-editor",
+        height: 460,
+        menubar: "insert table format view",
+        language: "uk",
+        branding: false,
+        plugins: "lists link table codesample advlist code image media autoresize",
+        toolbar:
+            "blocks | bold italic underline strikethrough | forecolor backcolor | " +
+            "numlist bullist | alignleft aligncenter alignright | " +
+            "link image media table | insertCode codesample emojiPicker | " +
+            "calloutBlue calloutGreen calloutOrange calloutRed | removeformat code",
+        table_toolbar:
+            "tableprops tabledelete | tableinsertrowbefore tableinsertrowafter tabledeleterow | " +
+            "tableinsertcolbefore tableinsertcolafter tabledeletecol | cellprops rowprops",
+        table_advtab: true,
+        table_cell_advtab: true,
+        table_row_advtab: true,
+        image_title: true,
+        automatic_uploads: true,
+        images_upload_url: "/admin/upload-file",
+        file_picker_types: "image media",
+        file_picker_callback: function (callback, value, meta) {
+            const input = document.createElement("input");
+            input.setAttribute("type", "file");
+
+            if (meta.filetype === "image") {
+                input.setAttribute("accept", "image/*");
             }
-        };
 
-        const editors = {};
+            if (meta.filetype === "media") {
+                input.setAttribute("accept", "video/*");
+            }
 
-        document.querySelectorAll(".quill-editor").forEach((editorElement) => {
-            const quill = new Quill(editorElement, quillOptions);
-            editors[editorElement.id] = quill;
-        });
+            input.onchange = async function () {
+                const file = this.files[0];
 
-        function syncEditorToHiddenInput(editorElementId) {
-            const editorElement = document.getElementById(editorElementId);
-            const hiddenInputId = editorElement.dataset.hiddenInput;
-            const hiddenInput = document.getElementById(hiddenInputId);
-            const quill = editors[editorElementId];
+                if (!file) {
+                    return;
+                }
 
-            hiddenInput.value = quill.root.innerHTML;
-        }
+                const formData = new FormData();
+                formData.append("file", file);
 
-        const courseMainForm = document.getElementById("course-main-form");
-        const courseMainMessage = document.getElementById("course-main-message");
-
-        courseMainForm.addEventListener("submit", async function(e) {
-            e.preventDefault();
-
-            const formData = new FormData(courseMainForm);
-
-            const response = await fetch(`/admin/course/${slug}/update-main`, {
-                method: "POST",
-                body: formData
-            });
-
-            const data = await response.json();
-
-            courseMainMessage.style.display = "block";
-            courseMainMessage.className = data.ok ? "form-message success-message" : "form-message error-message";
-            courseMainMessage.textContent = data.message;
-        });
-
-        document.querySelectorAll(".course-section-form").forEach(form => {
-            form.addEventListener("submit", async function(e) {
-                e.preventDefault();
-
-                const sectionId = form.dataset.sectionId;
-                const message = form.querySelector(".form-message");
-
-                syncEditorToHiddenInput(`editor-${sectionId}`);
-
-                const formData = new FormData(form);
-
-                const response = await fetch(`/admin/course/section/${sectionId}/update`, {
+                const response = await fetch("/admin/upload-file", {
                     method: "POST",
                     body: formData
                 });
 
                 const data = await response.json();
 
-                message.style.display = "block";
-                message.className = data.ok ? "form-message success-message" : "form-message error-message";
-                message.textContent = data.message;
-            });
-        });
-
-        document.querySelectorAll(".delete-section-btn").forEach(button => {
-            button.addEventListener("click", async function() {
-                const sectionId = button.dataset.sectionId;
-
-                const response = await fetch(`/admin/course/section/${sectionId}/delete`, {
-                    method: "POST"
-                });
-
-                const data = await response.json();
-
-                if (data.ok) {
-                    location.reload();
+                if (data.location) {
+                    callback(data.location);
                 } else {
-                    alert(data.message);
+                    alert(data.message || "Не вдалося завантажити файл");
+                }
+            };
+
+            input.click();
+        },
+        media_live_embeds: true,
+        entity_encoding: "raw",
+        verify_html: false,
+        cleanup: false,
+        extended_valid_elements:
+            "pre[class],code[class],span[class|style],div[class|style],table[class|style|border],thead,tbody,tr[class|style],th[class|style|colspan|rowspan],td[class|style|colspan|rowspan],iframe[src|width|height|frameborder|allowfullscreen|allow],video[src|controls|width|height],source[src|type],img[src|alt|title|width|height|class|style]",
+        valid_children: "+body[style],+div[pre],+pre[code],+td[pre],+th[pre]",
+        codesample_languages: [
+            { text: "HTML", value: "html" },
+            { text: "CSS", value: "css" },
+            { text: "JavaScript", value: "javascript" },
+            { text: "Python", value: "python" },
+            { text: "PHP", value: "php" },
+            { text: "C++", value: "cpp" },
+            { text: "SQL", value: "sql" }
+        ],
+        content_style: `
+            body {
+                font-family: Inter, Arial, sans-serif;
+                font-size: 16px;
+                line-height: 1.6;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 16px 0;
+            }
+
+            th, td {
+                border: 1px solid #dfe5f2;
+                padding: 12px;
+            }
+
+            th {
+                background: #eef2ff;
+                color: #4f46e5;
+                font-weight: 800;
+            }
+
+            code {
+                background: #e5e7eb;
+                padding: 3px 7px;
+                border-radius: 6px;
+                font-family: Consolas, monospace;
+            }
+
+            pre {
+                background: #111827;
+                color: #f9fafb;
+                padding: 16px;
+                border-radius: 14px;
+                overflow-x: auto;
+                white-space: pre-wrap;
+            }
+
+            pre code {
+                background: transparent;
+                color: inherit;
+                padding: 0;
+            }
+
+            img {
+                max-width: 100%;
+                height: auto;
+                border-radius: 14px;
+            }
+
+            iframe,
+            video {
+                max-width: 100%;
+                border-radius: 14px;
+            }
+
+            .custom-callout {
+                padding: 18px 20px;
+                border-radius: 18px;
+                margin: 18px 0;
+            }
+
+            .custom-callout-blue {
+                background: #eff6ff;
+                border-left: 6px solid #3b82f6;
+            }
+
+            .custom-callout-green {
+                background: #ecfdf5;
+                border-left: 6px solid #22c55e;
+            }
+
+            .custom-callout-orange {
+                background: #fff7ed;
+                border-left: 6px solid #f97316;
+            }
+
+            .custom-callout-red {
+                background: #fef2f2;
+                border-left: 6px solid #ef4444;
+            }
+        `,
+        setup: function (editor) {
+            editor.ui.registry.addButton("insertCode", {
+                text: "Вставити код",
+                tooltip: "Вставити HTML, JavaScript, PHP або інший код як приклад",
+                onAction: function () {
+                    editor.windowManager.open({
+                        title: "Вставити код",
+                        body: {
+                            type: "panel",
+                            items: [
+                                {
+                                    type: "selectbox",
+                                    name: "language",
+                                    label: "Мова",
+                                    items: [
+                                        { text: "HTML", value: "html" },
+                                        { text: "CSS", value: "css" },
+                                        { text: "JavaScript", value: "javascript" },
+                                        { text: "Python", value: "python" },
+                                        { text: "PHP", value: "php" },
+                                        { text: "C++", value: "cpp" },
+                                        { text: "SQL", value: "sql" },
+                                        { text: "Звичайний текст", value: "text" }
+                                    ]
+                                },
+                                {
+                                    type: "textarea",
+                                    name: "code",
+                                    label: "Код"
+                                }
+                            ]
+                        },
+                        buttons: [
+                            {
+                                type: "cancel",
+                                text: "Скасувати"
+                            },
+                            {
+                                type: "submit",
+                                text: "Вставити",
+                                primary: true
+                            }
+                        ],
+                        onSubmit: function (api) {
+                            const data = api.getData();
+                            const safeCode = escapeHtml(data.code || "");
+                            const language = data.language || "text";
+
+                            editor.insertContent(
+                                `<pre><code class="language-${language}">${safeCode}</code></pre><p></p>`
+                            );
+
+                            api.close();
+                        }
+                    });
                 }
             });
+
+            const emojiList = [
+                "\uD83D\uDCBB", "\uD83D\uDCCC", "\u26A1", "\u2705", "\u274C",
+                "\uD83D\uDD25", "\uD83D\uDCD8", "\uD83E\uDDE0", "\uD83C\uDFAF", "\uD83D\uDE80",
+                "\u2B50", "\uD83D\uDCDD", "\uD83D\uDD0D", "\uD83D\uDCCA", "\uD83E\uDDE9",
+                "\u2699\uFE0F", "\uD83D\uDDA5\uFE0F", "\u2328\uFE0F", "\uD83D\uDCC2", "\uD83D\uDD12"
+            ];
+
+            editor.ui.registry.addMenuButton("emojiPicker", {
+                text: "\uD83D\uDE0A",
+                tooltip: "Вставити emoji",
+                fetch: function (callback) {
+                    const items = emojiList.map((emoji) => ({
+                        type: "menuitem",
+                        text: emoji,
+                        onAction: function () {
+                            editor.insertContent(emoji + " ");
+                        }
+                    }));
+
+                    callback(items);
+                }
+            });
+
+            editor.ui.registry.addButton("calloutBlue", {
+                text: "Синій блок",
+                tooltip: "Інформаційний блок",
+                onAction: function () {
+                    editor.insertContent('<div class="custom-callout custom-callout-blue">Напиши текст тут...</div><p></p>');
+                }
+            });
+
+            editor.ui.registry.addButton("calloutGreen", {
+                text: "Зелений блок",
+                tooltip: "Успішний або корисний блок",
+                onAction: function () {
+                    editor.insertContent('<div class="custom-callout custom-callout-green">Напиши текст тут...</div><p></p>');
+                }
+            });
+
+            editor.ui.registry.addButton("calloutOrange", {
+                text: "Оранжевий блок",
+                tooltip: "Блок для прикладу або попередження",
+                onAction: function () {
+                    editor.insertContent('<div class="custom-callout custom-callout-orange">Напиши текст тут...</div><p></p>');
+                }
+            });
+
+            editor.ui.registry.addButton("calloutRed", {
+                text: "Червоний блок",
+                tooltip: "Важливе попередження",
+                onAction: function () {
+                    editor.insertContent('<div class="custom-callout custom-callout-red">Напиши текст тут...</div><p></p>');
+                }
+            });
+        }
+    });
+
+    const courseMainForm = document.getElementById("course-main-form");
+    const courseMainMessage = document.getElementById("course-main-message");
+
+    courseMainForm.addEventListener("submit", async function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(courseMainForm);
+
+        const response = await fetch(`/admin/course/${slug}/update-main`, {
+            method: "POST",
+            body: formData
         });
 
-        const addSectionForm = document.getElementById("add-section-form");
-        const addSectionMessage = document.getElementById("add-section-message");
+        const data = await response.json();
 
-        addSectionForm.addEventListener("submit", async function(e) {
+        courseMainMessage.style.display = "block";
+        courseMainMessage.className = data.ok ? "form-message success-message" : "form-message error-message";
+        courseMainMessage.textContent = data.message;
+    });
+
+    document.querySelectorAll(".course-section-form").forEach(form => {
+        form.addEventListener("submit", async function(e) {
             e.preventDefault();
 
-            syncEditorToHiddenInput("new-section-editor");
+            tinymce.triggerSave();
 
-            const formData = new FormData(addSectionForm);
+            const sectionId = form.dataset.sectionId;
+            const message = form.querySelector(".form-message");
+            const formData = new FormData(form);
 
-            const response = await fetch(`/admin/course/${slug}/section/add`, {
+            const response = await fetch(`/admin/course/section/${sectionId}/update`, {
                 method: "POST",
                 body: formData
             });
 
             const data = await response.json();
 
-            addSectionMessage.style.display = "block";
-            addSectionMessage.className = data.ok ? "form-message success-message" : "form-message error-message";
-            addSectionMessage.textContent = data.message;
-
-            if (data.ok) {
-                setTimeout(() => location.reload(), 500);
-            }
+            message.style.display = "block";
+            message.className = data.ok ? "form-message success-message" : "form-message error-message";
+            message.textContent = data.message;
         });
-    </script>
+    });
+
+    document.querySelectorAll(".delete-section-btn").forEach(button => {
+    button.addEventListener("click", async function() {
+
+        const confirmed = confirm("Ви точно хочете видалити цю секцію?");
+
+        if (!confirmed) {
+            return;
+        }
+
+        const sectionId = button.dataset.sectionId;
+
+        const response = await fetch(`/admin/course/section/${sectionId}/delete`, {
+            method: "POST"
+        });
+
+        const data = await response.json();
+
+        if (data.ok) {
+            location.reload();
+        } else {
+            alert(data.message);
+        }
+    });
+});
+
+    const addSectionForm = document.getElementById("add-section-form");
+    const addSectionMessage = document.getElementById("add-section-message");
+
+    addSectionForm.addEventListener("submit", async function(e) {
+        e.preventDefault();
+
+        tinymce.triggerSave();
+
+        const formData = new FormData(addSectionForm);
+
+        const response = await fetch(`/admin/course/${slug}/section/add`, {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await response.json();
+
+        addSectionMessage.style.display = "block";
+        addSectionMessage.className = data.ok ? "form-message success-message" : "form-message error-message";
+        addSectionMessage.textContent = data.message;
+
+        if (data.ok) {
+            setTimeout(() => location.reload(), 500);
+        }
+    });
+
+    const titleEmojis = [
+        "\uD83D\uDCBB", "\uD83D\uDCCC", "\u26A1", "\u2705", "\uD83D\uDD25",
+        "\uD83D\uDCD8", "\uD83E\uDDE0", "\uD83C\uDFAF", "\uD83D\uDE80", "\u2B50",
+        "\uD83D\uDCDD", "\uD83D\uDD0D", "\uD83D\uDCCA", "\uD83E\uDDE9", "\u2699\uFE0F",
+        "\uD83D\uDDA5\uFE0F", "\u2328\uFE0F", "\uD83D\uDCC2", "\uD83D\uDD12", "\uD83C\uDF93"
+    ];
+
+    document.querySelectorAll(".emoji-title-btn").forEach((button) => {
+        button.addEventListener("click", function () {
+            const wrapper = button.closest(".title-with-emoji");
+            const input = wrapper.querySelector("input");
+
+            const oldPicker = document.querySelector(".title-emoji-picker");
+            if (oldPicker) {
+                oldPicker.remove();
+                return;
+            }
+
+            const picker = document.createElement("div");
+            picker.className = "title-emoji-picker";
+
+            titleEmojis.forEach((emoji) => {
+                const emojiButton = document.createElement("button");
+                emojiButton.type = "button";
+                emojiButton.textContent = emoji;
+
+                emojiButton.addEventListener("click", function () {
+                    const start = input.selectionStart;
+                    const end = input.selectionEnd;
+                    const value = input.value;
+
+                    input.value = value.slice(0, start) + emoji + " " + value.slice(end);
+                    input.focus();
+
+                    picker.remove();
+                });
+
+                picker.appendChild(emojiButton);
+            });
+
+            document.body.appendChild(picker);
+
+            const rect = button.getBoundingClientRect();
+            picker.style.left = rect.left + "px";
+            picker.style.top = rect.bottom + window.scrollY + 8 + "px";
+        });
+    });
+</script>
 </body>
 </html>

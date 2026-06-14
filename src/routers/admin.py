@@ -1,6 +1,9 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Form, Request
+import os
+import uuid
+import re
+from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 
 from src.core.settings import settings
@@ -24,11 +27,16 @@ router = APIRouter()
 @router.get("/admin", response_class=HTMLResponse)
 async def admin_page(
     request: Request,
-    admin_service: Annotated[AdminService, Depends(get_admin_service)],
+    admin_service: Annotated[
+        AdminService,
+        Depends(get_admin_service),
+    ],
     course_service: Annotated[
         CourseContentService,
         Depends(get_course_content_service),
     ],
+    email_search: str = "",
+    course_filter: str = "",
 ):
     user_id = request.session.get("user_id")
 
@@ -38,7 +46,10 @@ async def admin_page(
     if request.session.get("role") != "admin":
         return RedirectResponse(url="/profile", status_code=303)
 
-    data = admin_service.get_admin_dashboard_data().model_dump()
+    data = admin_service.get_admin_dashboard_data(
+    email_search=email_search,
+    course_filter=course_filter,
+    )
     courses = course_service.get_courses_for_admin()
 
     return render_page(request, "admin.html", **data, courses=courses)
@@ -390,3 +401,39 @@ async def make_admin(
     auth_service.make_user_admin_by_email(settings.admin_email)
 
     return {"message": "Адмін оновлений через email з .env"}
+
+@router.post("/admin/upload-file")
+async def upload_file(
+    request: Request,
+    file: UploadFile = File(...),
+):
+    if request.session.get("role") != "admin":
+        return JSONResponse({"ok": False, "message": "Доступ лише для адміністратора."})
+
+    allowed_extensions = {
+        ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg",
+        ".mp4", ".webm", ".ogg",
+    }
+
+    file_ext = os.path.splitext(file.filename)[1].lower()
+
+    if file_ext not in allowed_extensions:
+        return JSONResponse(
+            {"ok": False, "message": "Недозволений тип файлу."},
+            status_code=400,
+        )
+
+    upload_dir = os.path.join("static", "uploads")
+
+    if os.path.isfile(upload_dir):
+        os.remove(upload_dir)
+
+    os.makedirs(upload_dir, exist_ok=True)
+
+    file_name = f"{uuid.uuid4()}{file_ext}"
+    file_path = os.path.join(upload_dir, file_name)
+
+    with open(file_path, "wb") as buffer:
+        buffer.write(await file.read())
+
+    return {"location": f"/static/uploads/{file_name}"}

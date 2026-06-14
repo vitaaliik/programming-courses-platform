@@ -39,13 +39,17 @@ html {
 }
 
 body {
+    margin: 0;
+    padding: 0;
     font-family: "Inter", sans-serif;
-    line-height: 1.65;
-    color: var(--text-main);
-    background:
-        radial-gradient(circle at top left, rgba(99, 102, 241, 0.16), transparent 32%),
-        radial-gradient(circle at top right, rgba(249, 115, 22, 0.10), transparent 28%),
-        var(--bg-main);
+
+    background-image: url("/static/image/Foon.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+
+    min-height: 100vh;
 }
 
 .container {
@@ -1400,4 +1404,360 @@ button.btn-danger:hover,
     padding: 9px 18px;
     font-size: 0.9rem;
     margin: 10px auto 0;
+}
+
+/* ===== Improved Quill editor toolbar ===== */
+
+.ql-toolbar button.ql-emoji::after {
+    content: "😊";
+    font-size: 15px;
+}
+
+.ql-toolbar button.ql-table::after {
+    content: "▦";
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.ql-toolbar button.ql-note::after {
+    content: "📌";
+    font-size: 15px;
+}
+
+.ql-toolbar button.ql-warning::after {
+    content: "⚡";
+    font-size: 15px;
+}
+
+.ql-toolbar button.ql-emoji svg,
+.ql-toolbar button.ql-table svg,
+.ql-toolbar button.ql-note svg,
+.ql-toolbar button.ql-warning svg {
+    display: none;
+}
+
+.ql-editor table,
+.course-section table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 18px 0;
+    overflow: hidden;
+    border-radius: 14px;
+}
+
+.ql-editor table th,
+.ql-editor table td,
+.course-section table th,
+.course-section table td {
+    border: 1px solid var(--border);
+    padding: 12px;
+    text-align: left;
+}
+
+.ql-editor table th,
+.course-section table th {
+    background: var(--bg-soft);
+    color: var(--primary-dark);
+    font-weight: 800;
+}
+
+.ql-editor .note,
+.ql-editor .practice-block {
+    padding: 16px 18px;
+    border-radius: 16px;
+    margin: 18px 0;
+}
+
+.ql-editor .note {
+    background: #f5f3ff;
+    border-left: 5px solid var(--secondary);
+}
+
+.ql-editor .practice-block {
+    background: #fff7ed;
+    border-left: 5px solid var(--accent);
+}
+
+/* ===== Better course editor tools ===== */
+
+.ql-toolbar button.ql-emojiPicker::after {
+    content: "😊";
+    font-size: 16px;
+}
+
+.ql-toolbar button.ql-tableBlock::after {
+    content: "▦";
+    font-size: 17px;
+    font-weight: 800;
+}
+
+.ql-toolbar button.ql-infoBlock::after {
+    content: "🔵";
+    font-size: 15px;
+}
+
+.ql-toolbar button.ql-successBlock::after {
+    content: "🟢";
+    font-size: 15px;
+}
+
+.ql-toolbar button.ql-warningBlock::after {
+    content: "🟠";
+    font-size: 15px;
+}
+
+.ql-toolbar button.ql-dangerBlock::after {
+    content: "🔴";
+    font-size: 15px;
+}
+
+.ql-toolbar button.ql-emojiPicker svg,
+.ql-toolbar button.ql-tableBlock svg,
+.ql-toolbar button.ql-infoBlock svg,
+.ql-toolbar button.ql-successBlock svg,
+.ql-toolbar button.ql-warningBlock svg,
+.ql-toolbar button.ql-dangerBlock svg {
+    display: none;
+}
+
+.emoji-picker-box {
+    position: absolute;
+    z-index: 9999;
+    width: 260px;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: var(--shadow-md);
+}
+
+.emoji-picker-box button {
+    border: none;
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 8px;
+    font-size: 20px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.emoji-picker-box button:hover {
+    background: var(--primary-soft);
+    transform: scale(1.08);
+}
+
+.ql-editor table,
+.course-section table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 18px 0;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.ql-editor table th,
+.ql-editor table td,
+.course-section table th,
+.course-section table td {
+    border: 1px solid var(--border);
+    padding: 14px 16px;
+    text-align: left;
+}
+
+.ql-editor table th,
+.course-section table th {
+    background: #eef2ff;
+    color: var(--primary-dark);
+    font-weight: 800;
+}
+
+.ql-editor table code,
+.course-section table code {
+    background: #e5e7eb;
+    color: #111827;
+    padding: 4px 8px;
+    border-radius: 8px;
+}
+
+.custom-callout {
+    padding: 18px 20px;
+    border-radius: 18px;
+    margin: 18px 0;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.custom-callout-info {
+    background: #eff6ff;
+    border-left: 6px solid #3b82f6;
+}
+
+.custom-callout-success {
+    background: #ecfdf5;
+    border-left: 6px solid #22c55e;
+}
+
+.custom-callout-warning {
+    background: #fff7ed;
+    border-left: 6px solid #f97316;
+}
+
+.custom-callout-danger {
+    background: #fef2f2;
+    border-left: 6px solid #ef4444;
+}
+
+.tox-tinymce {
+    border-radius: 16px !important;
+    border-color: var(--border) !important;
+}
+
+.tox .tox-toolbar,
+.tox .tox-toolbar__primary {
+    background: #f8fafc !important;
+}
+
+.custom-callout {
+    padding: 18px 20px;
+    border-radius: 18px;
+    margin: 18px 0;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.custom-callout-blue {
+    background: #eff6ff;
+    border-left: 6px solid #3b82f6;
+}
+
+.custom-callout-green {
+    background: #ecfdf5;
+    border-left: 6px solid #22c55e;
+}
+
+.custom-callout-orange {
+    background: #fff7ed;
+    border-left: 6px solid #f97316;
+}
+
+.custom-callout-red {
+    background: #fef2f2;
+    border-left: 6px solid #ef4444;
+}
+
+.tox-edit-area iframe {
+    overflow-y: hidden !important;
+}
+
+.tox .tox-edit-area__iframe {
+    overflow-y: hidden !important;
+}
+
+.tox-editor-container,
+.tox-edit-area {
+    overflow: hidden !important;
+}
+
+.title-with-emoji {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.title-with-emoji input {
+    flex: 1;
+}
+
+.emoji-title-btn {
+    width: 48px;
+    height: 48px;
+    border: none;
+    border-radius: 14px;
+    background: var(--primary-soft);
+    cursor: pointer;
+    font-size: 20px;
+}
+
+.title-emoji-picker {
+    position: absolute;
+    z-index: 9999;
+    width: 260px;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: var(--shadow-md);
+}
+
+.title-emoji-picker button {
+    border: none;
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 8px;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.title-emoji-picker button:hover {
+    background: var(--primary-soft);
+}
+
+.admin-filter-form {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+
+.admin-filter-form input,
+.admin-filter-form select {
+    flex: 1;
+    min-width: 220px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+}
+
+.admin-collapse-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.admin-collapse-btn {
+    border: none;
+    background: var(--primary-soft);
+    color: var(--primary-dark);
+    padding: 10px 18px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.auth-box button,
+.profile-edit-card button {
+    width: 100%;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    padding: 13px 22px;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 10px 24px rgba(99, 102, 241, 0.22);
+    transition: 0.22s ease;
+}
+
+.auth-box button:hover,
+.profile-edit-card button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 32px rgba(99, 102, 241, 0.30);
 }
